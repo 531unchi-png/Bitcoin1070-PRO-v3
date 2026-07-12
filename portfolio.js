@@ -749,6 +749,12 @@ function refreshPortfolio() {
     renderRanking(evaluations);
     renderHistory();
     updatePortfolioChart(evaluations);
+
+    if (typeof updatePortfolioAnalytics === "function") {
+
+        updatePortfolioAnalytics(evaluations);
+
+    }
 }
 
 // =====================================
