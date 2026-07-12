@@ -1,1 +1,580 @@
+/* =====================================
+   Bitcoin1070 PRO v3.0
+   Main Style
+===================================== */
 
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background:
+        radial-gradient(
+            circle at top,
+            #172238 0%,
+            #0a0f1d 42%,
+            #050812 100%
+        );
+    color: #f4f7ff;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Hiragino Kaku Gothic ProN",
+        "Yu Gothic",
+        sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+/* =====================================
+   Header
+===================================== */
+
+header {
+    padding: 28px 18px 24px;
+    text-align: center;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(247, 147, 26, 0.22),
+            rgba(25, 35, 60, 0.85)
+        );
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.08);
+}
+
+header h1 {
+    margin: 0;
+    font-size: clamp(27px, 8vw, 43px);
+    letter-spacing: -1px;
+}
+
+header p {
+    margin: 8px 0 0;
+    color: #b9c4dc;
+    font-size: 14px;
+}
+
+/* =====================================
+   Layout
+===================================== */
+
+.container {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 18px 14px 50px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.card {
+    margin-bottom: 14px;
+    padding: 20px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(22, 31, 52, 0.97),
+            rgba(11, 17, 31, 0.97)
+        );
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    box-shadow:
+        0 14px 35px rgba(0, 0, 0, 0.24);
+    overflow: hidden;
+}
+
+.card h2,
+.card h3 {
+    margin-top: 0;
+}
+
+.card h2 {
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.title {
+    margin-bottom: 10px;
+    color: #b8c4db;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.big {
+    font-size: clamp(27px, 8vw, 42px);
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.small {
+    margin-top: 10px;
+    color: #aeb9ce;
+    font-size: 13px;
+}
+
+/* =====================================
+   Total asset
+===================================== */
+
+#totalAsset {
+    margin: 4px 0 8px;
+    font-size: clamp(35px, 11vw, 58px);
+    line-height: 1.1;
+    letter-spacing: -2px;
+}
+
+#assetComment {
+    margin-bottom: 0;
+    color: #b8c4d8;
+    font-size: 14px;
+}
+
+/* =====================================
+   Profit / loss
+===================================== */
+
+.profit-positive {
+    color: #45df9a;
+}
+
+.profit-negative {
+    color: #ff6f7d;
+}
+
+.profit-neutral {
+    color: #d5dbea;
+}
+
+/* =====================================
+   Portfolio
+===================================== */
+
+.portfolio-section {
+    margin-bottom: 26px;
+}
+
+.portfolio-section:last-child {
+    margin-bottom: 0;
+}
+
+.portfolio-section h3 {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.08);
+}
+
+.asset-card-list {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.asset-card {
+    padding: 16px;
+    background:
+        rgba(255, 255, 255, 0.035);
+    border:
+        1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 14px;
+}
+
+.asset-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.asset-card-header strong {
+    display: block;
+    font-size: 17px;
+}
+
+.asset-symbol {
+    display: inline-block;
+    margin-top: 2px;
+    color: #9faac0;
+    font-size: 12px;
+}
+
+.asset-type {
+    flex-shrink: 0;
+    padding: 4px 7px;
+    background:
+        rgba(247, 147, 26, 0.12);
+    border:
+        1px solid rgba(247, 147, 26, 0.2);
+    border-radius: 999px;
+    color: #f8ba71;
+    font-size: 10px;
+}
+
+.asset-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+}
+
+.asset-row:last-child {
+    border-bottom: none;
+}
+
+.asset-row span {
+    color: #9faac0;
+}
+
+.asset-row strong {
+    max-width: 65%;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+/* =====================================
+   Editor
+===================================== */
+
+#editor {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.editor-item {
+    padding: 15px;
+    background:
+        rgba(255, 255, 255, 0.035);
+    border:
+        1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 14px;
+}
+
+.editor-title {
+    margin-bottom: 12px;
+}
+
+.editor-item label {
+    display: block;
+    margin-top: 10px;
+    color: #abb6ca;
+    font-size: 12px;
+}
+
+.editor-item input {
+    width: 100%;
+    margin-top: 5px;
+    padding: 11px 12px;
+    background: #080d19;
+    color: #ffffff;
+    border:
+        1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    outline: none;
+}
+
+.editor-item input:focus {
+    border-color: #f7931a;
+    box-shadow:
+        0 0 0 3px rgba(247, 147, 26, 0.12);
+}
+
+/* =====================================
+   Buttons
+===================================== */
+
+button {
+    min-height: 46px;
+    padding: 11px 18px;
+    color: #ffffff;
+    background:
+        linear-gradient(
+            135deg,
+            #f7931a,
+            #e46c0a
+        );
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow:
+        0 8px 18px rgba(247, 147, 26, 0.18);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+#saveButton {
+    width: 100%;
+    margin-top: 16px;
+}
+
+.setting-menu {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.setting-menu button:nth-child(2) {
+    background:
+        linear-gradient(
+            135deg,
+            #377de6,
+            #2459b4
+        );
+}
+
+.setting-menu button:nth-child(3) {
+    background:
+        linear-gradient(
+            135deg,
+            #df5261,
+            #a92f3b
+        );
+}
+
+/* =====================================
+   Chart
+===================================== */
+
+#assetChart {
+    width: 100% !important;
+    max-width: 620px;
+    max-height: 620px;
+    margin: 0 auto;
+}
+
+/* =====================================
+   Ranking
+===================================== */
+
+.ranking-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 4px;
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ranking-row:last-child {
+    border-bottom: none;
+}
+
+.ranking-row span {
+    font-weight: 700;
+}
+
+.ranking-row strong {
+    color: #dce4f5;
+    font-size: 13px;
+    text-align: right;
+}
+
+/* =====================================
+   History
+===================================== */
+
+.history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 4px;
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.07);
+}
+
+.history-row:last-child {
+    border-bottom: none;
+}
+
+.history-row span {
+    color: #9faac0;
+    font-size: 12px;
+}
+
+/* =====================================
+   AI
+===================================== */
+
+.ai {
+    padding: 16px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59, 130, 246, 0.12),
+            rgba(139, 92, 246, 0.1)
+        );
+    border:
+        1px solid rgba(128, 150, 255, 0.18);
+    border-radius: 14px;
+    color: #dce6ff;
+}
+
+/* =====================================
+   Progress
+===================================== */
+
+.progress {
+    height: 10px;
+    margin-top: 16px;
+    background:
+        rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background:
+        linear-gradient(
+            90deg,
+            #f7931a,
+            #ffd16b
+        );
+    border-radius: inherit;
+    transition: width 0.6s ease;
+}
+
+/* =====================================
+   TradingView
+===================================== */
+
+#tradingview {
+    width: 100%;
+    min-height: 500px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* =====================================
+   Footer
+===================================== */
+
+footer {
+    padding: 28px 10px;
+    color: #8792a7;
+    text-align: center;
+    font-size: 12px;
+}
+
+footer p {
+    margin: 4px 0;
+}
+
+/* =====================================
+   Mobile
+===================================== */
+
+@media (max-width: 760px) {
+
+    .container {
+        padding: 12px 10px 38px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .card {
+        padding: 16px;
+        border-radius: 15px;
+    }
+
+    .asset-card-list,
+    #editor {
+        grid-template-columns: 1fr;
+    }
+
+    .setting-menu {
+        grid-template-columns: 1fr;
+    }
+
+    .asset-card-header {
+        align-items: center;
+    }
+
+    .asset-row {
+        font-size: 12px;
+    }
+
+    #tradingview {
+        min-height: 430px;
+    }
+}
+
+/* =====================================
+   Very small screens
+===================================== */
+
+@media (max-width: 380px) {
+
+    header h1 {
+        font-size: 25px;
+    }
+
+    .card {
+        padding: 14px;
+    }
+
+    #totalAsset {
+        font-size: 34px;
+    }
+
+    .asset-row {
+        display: block;
+    }
+
+    .asset-row strong {
+        display: block;
+        max-width: 100%;
+        margin-top: 3px;
+        text-align: left;
+    }
+
+    .ranking-row,
+    .history-row {
+        display: block;
+    }
+
+    .ranking-row strong,
+    .history-row strong {
+        display: block;
+        margin-top: 4px;
+        text-align: left;
+    }
+}
