@@ -1,16 +1,14 @@
 // =====================================
-// Stock Manager v3.0
+// Stock Manager v3.1
 // Bitcoin1070 PRO
+// Cloudflare Worker 自動株価取得
 // =====================================
 
-// Cloudflare Worker完成後にURLを入れる
-// 例:
-// const STOCK_API_URL =
-// "https://bitcoin1070-api.531unchi.workers.dev";
+// 自分のCloudflare Worker
+const STOCK_API_URL =
+    "https://bitcoin1070-api.531unchi.workers.dev";
 
-const STOCK_API_URL = "";
-
-// API取得に失敗した場合の仮価格
+// API取得に失敗した場合の予備価格
 const DEFAULT_STOCK_PRICES = {
     NVDA: 185,
     USDJPY: 160,
@@ -21,25 +19,33 @@ const DEFAULT_STOCK_PRICES = {
     VRAIN: 3950
 };
 
-// portfolio.jsから参照する株価データ
+// portfolio.jsから参照する株価
 let stockPrices = {
     ...DEFAULT_STOCK_PRICES
 };
 
+// 最終更新時刻
+let stockPricesUpdatedAt = null;
+
 // =====================================
-// 数値チェック
+// 有効な数値だけ採用
 // =====================================
 
 function validStockNumber(value, fallback = 0) {
     const number = Number(value);
 
-    return Number.isFinite(number) && number > 0
-        ? number
-        : fallback;
+    if (
+        Number.isFinite(number) &&
+        number > 0
+    ) {
+        return number;
+    }
+
+    return fallback;
 }
 
 // =====================================
-// APIデータを整形
+// Workerのデータを整形
 // =====================================
 
 function normalizeStockData(data) {
@@ -77,38 +83,42 @@ function normalizeStockData(data) {
 }
 
 // =====================================
-// 株価取得
+// リアルタイム株価取得
 // =====================================
 
 async function refreshStockPrices() {
-    if (!STOCK_API_URL) {
-        console.info(
-            "株価API未設定：仮価格を使用します"
-        );
-
-        return stockPrices;
-    }
-
     try {
+        console.log("株価取得開始");
+
         const response = await fetch(
-            STOCK_API_URL,
+            `${STOCK_API_URL}?t=${Date.now()}`,
             {
+                method: "GET",
                 cache: "no-store"
             }
         );
 
         if (!response.ok) {
             throw new Error(
-                `株価APIエラー: ${response.status}`
+                `株価APIエラー：${response.status}`
             );
         }
 
         const data = await response.json();
 
-        stockPrices = normalizeStockData(data);
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        stockPrices =
+            normalizeStockData(data);
+
+        stockPricesUpdatedAt =
+            data.fetchedAt ||
+            new Date().toISOString();
 
         console.log(
-            "株価取得成功:",
+            "リアルタイム株価取得成功",
             stockPrices
         );
 
@@ -116,8 +126,13 @@ async function refreshStockPrices() {
 
     } catch (error) {
         console.error(
-            "株価取得失敗:",
+            "リアルタイム株価取得失敗",
             error
+        );
+
+        console.log(
+            "予備価格を使用します",
+            stockPrices
         );
 
         return stockPrices;
@@ -125,12 +140,13 @@ async function refreshStockPrices() {
 }
 
 // =====================================
-// 株価更新後に画面を再計算
+// 株価を取得して資産画面を更新
 // =====================================
 
 async function initializeStockPrices() {
     await refreshStockPrices();
 
+    // portfolio.js側を再計算
     if (
         typeof loadMarketData === "function"
     ) {
@@ -139,11 +155,28 @@ async function initializeStockPrices() {
 }
 
 // =====================================
-// 外部から株価を手動更新
+// 手動更新用
 // =====================================
 
 async function reloadStockPrices() {
     await initializeStockPrices();
 
-    alert("株価を更新しました");
+    alert("最新の株価へ更新しました");
 }
+
+// =====================================
+// 起動
+// =====================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        initializeStockPrices();
+
+        // 5分ごとに株価を自動更新
+        setInterval(
+            initializeStockPrices,
+            5 * 60 * 1000
+        );
+    }
+);
