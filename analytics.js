@@ -496,10 +496,24 @@ function drawAssetHistoryChart(
             )
         );
 
-    const totalValues =
-        filtered.map(item =>
-            Number(item.total) || 0
-        );
+    const seriesLabels = {
+    total: "総資産",
+    crypto: "仮想通貨",
+    jp: "日本株",
+    us: "米国株"
+};
+
+const values =
+    filtered.map(item =>
+        Number(
+            item[selectedHistorySeries]
+        ) || 0
+    );
+
+const selectedLabel =
+    seriesLabels[
+        selectedHistorySeries
+    ] || "総資産";
 
     assetHistoryChartInstance =
         new Chart(canvas, {
@@ -510,15 +524,15 @@ function drawAssetHistoryChart(
 
                 datasets: [
                     {
-                        label: "総資産",
-                        data: totalValues,
+                        label: selectedLabel,
+                        data: values,
                         tension: 0.25,
                         fill: true,
                         borderWidth: 3,
                         pointRadius:
-                            totalValues.length <= 14
-                                ? 4
-                                : 1,
+                            values.length <= 14
+                              ? 4
+                              : 1,
                         pointHoverRadius: 6
                     }
                 ]
@@ -558,9 +572,10 @@ function drawAssetHistoryChart(
                         callbacks: {
                             label(context) {
                                 return (
-                                    "総資産：" +
-                                    formatYen(
-                                        context.raw
+                                   `${selectedLabel}：` +
+                                   formatYen(
+                                       context.raw
+)
                                     )
                                 );
                             }
