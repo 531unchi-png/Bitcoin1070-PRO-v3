@@ -1,67 +1,94 @@
 // =====================================
-// Asset Editor v1.0
-// 銘柄追加・削除
+// Asset Editor v2.0
+// 銘柄追加・削除・Yahooコード対応
 // =====================================
 
-// 既存の編集画面を拡張
 window.renderEditor = function () {
-    const editor = document.getElementById("editor");
+    const editor =
+        document.getElementById("editor");
 
     if (!editor) return;
 
-    const assetInputs = assets.map((asset, index) => {
-        const costUnit =
-            asset.type === "us" ? "ドル" : "円";
+    const assetInputs = assets
+        .map((asset, index) => {
+            const costUnit =
+                asset.type === "us"
+                    ? "ドル"
+                    : "円";
 
-        return `
-            <div class="editor-item">
+            const yahooInput =
+                asset.type === "jp" ||
+                asset.type === "us"
+                    ? `
+                    <label>
+                        Yahoo Financeコード
+                        <input
+                            type="text"
+                            data-index="${index}"
+                            data-field="yahooSymbol"
+                            value="${asset.yahooSymbol || ""}"
+                            placeholder="${
+                                asset.type === "jp"
+                                    ? "例：1605.T"
+                                    : "例：AAPL"
+                            }">
+                    </label>
+                    `
+                    : "";
 
-                <div class="editor-title">
-                    <strong>
-                        ${asset.name}（${asset.symbol}）
-                    </strong>
+            return `
+                <div class="editor-item">
 
-                    <button
-                        type="button"
-                        onclick="deleteAsset(${index})"
-                        style="
-                            float:right;
-                            min-height:auto;
-                            padding:5px 9px;
-                            background:#a92f3b;
-                            font-size:12px;
-                        ">
-                        🗑 削除
-                    </button>
+                    <div class="editor-title">
+                        <strong>
+                            ${asset.name}
+                            （${asset.symbol}）
+                        </strong>
+
+                        <button
+                            type="button"
+                            onclick="deleteAsset(${index})"
+                            style="
+                                float:right;
+                                min-height:auto;
+                                padding:5px 9px;
+                                background:#a92f3b;
+                                font-size:12px;
+                            ">
+                            🗑 削除
+                        </button>
+                    </div>
+
+                    <label>
+                        数量
+                        <input
+                            type="number"
+                            inputmode="decimal"
+                            step="any"
+                            min="0"
+                            data-index="${index}"
+                            data-field="amount"
+                            value="${asset.amount}">
+                    </label>
+
+                    <label>
+                        平均取得単価（${costUnit}）
+                        <input
+                            type="number"
+                            inputmode="decimal"
+                            step="any"
+                            min="0"
+                            data-index="${index}"
+                            data-field="cost"
+                            value="${asset.cost}">
+                    </label>
+
+                    ${yahooInput}
+
                 </div>
-
-                <label>
-                    数量
-                    <input
-                        type="number"
-                        inputmode="decimal"
-                        step="any"
-                        min="0"
-                        data-index="${index}"
-                        data-field="amount"
-                        value="${asset.amount}">
-                </label>
-
-                <label>
-                    平均取得単価（${costUnit}）
-                    <input
-                        type="number"
-                        inputmode="decimal"
-                        step="any"
-                        min="0"
-                        data-index="${index}"
-                        data-field="cost"
-                        value="${asset.cost}">
-                </label>
-
-            </div>
-        `;
-    }).join("");
+            `;
+        })
+        .join("");
 
     editor.innerHTML = `
         ${assetInputs}
@@ -112,7 +139,7 @@ window.renderEditor = function () {
                 <input
                     id="newAssetName"
                     type="text"
-                    placeholder="例：Bittensor">
+                    placeholder="例：Apple">
             </label>
 
             <label>
@@ -145,6 +172,14 @@ window.renderEditor = function () {
                     placeholder="仮想通貨のみ。例：bittensor">
             </label>
 
+            <label>
+                Yahoo Financeコード
+                <input
+                    id="newYahooSymbol"
+                    type="text"
+                    placeholder="米国株：AAPL／日本株：1605.T">
+            </label>
+
             <button
                 type="button"
                 onclick="addNewAsset()"
@@ -160,20 +195,26 @@ window.renderEditor = function () {
 // 銘柄追加
 // =====================================
 
-window.addNewAsset = function () {
+window.addNewAsset = async function () {
     const type =
-        document.getElementById("newAssetType").value;
+        document.getElementById(
+            "newAssetType"
+        ).value;
 
     const symbol =
-        document.getElementById("newAssetSymbol")
-            .value
-            .trim()
-            .toUpperCase();
+        document.getElementById(
+            "newAssetSymbol"
+        )
+        .value
+        .trim()
+        .toUpperCase();
 
     const name =
-        document.getElementById("newAssetName")
-            .value
-            .trim();
+        document.getElementById(
+            "newAssetName"
+        )
+        .value
+        .trim();
 
     const amount =
         Math.max(
@@ -196,28 +237,55 @@ window.addNewAsset = function () {
         );
 
     const coinGeckoId =
-        document.getElementById("newCoinGeckoId")
-            .value
-            .trim()
-            .toLowerCase();
+        document.getElementById(
+            "newCoinGeckoId"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+    const yahooSymbol =
+        document.getElementById(
+            "newYahooSymbol"
+        )
+        .value
+        .trim();
 
     if (!symbol || !name) {
-        alert("シンボルと銘柄名を入力してください");
-        return;
-    }
-
-    const duplicate = assets.some(
-        asset => asset.symbol === symbol
-    );
-
-    if (duplicate) {
-        alert("同じシンボルがすでに登録されています");
-        return;
-    }
-
-    if (type === "crypto" && !coinGeckoId) {
         alert(
-            "仮想通貨はCoinGecko IDも入力してください"
+            "シンボルと銘柄名を入力してください"
+        );
+        return;
+    }
+
+    if (
+        assets.some(
+            asset =>
+                asset.symbol === symbol
+        )
+    ) {
+        alert(
+            "同じシンボルが登録されています"
+        );
+        return;
+    }
+
+    if (
+        type === "crypto" &&
+        !coinGeckoId
+    ) {
+        alert(
+            "CoinGecko IDを入力してください"
+        );
+        return;
+    }
+
+    if (
+        (type === "jp" || type === "us") &&
+        !yahooSymbol
+    ) {
+        alert(
+            "Yahoo Financeコードを入力してください"
         );
         return;
     }
@@ -231,7 +299,16 @@ window.addNewAsset = function () {
     };
 
     if (type === "crypto") {
-        newAsset.coinGeckoId = coinGeckoId;
+        newAsset.coinGeckoId =
+            coinGeckoId;
+    }
+
+    if (
+        type === "jp" ||
+        type === "us"
+    ) {
+        newAsset.yahooSymbol =
+            yahooSymbol;
     }
 
     assets.push(newAsset);
@@ -239,13 +316,23 @@ window.addNewAsset = function () {
     transactionHistory.unshift({
         id: Date.now(),
         date: new Date().toISOString(),
-        action: `${name}（${symbol}）を追加`
+        action:
+            `${name}（${symbol}）を追加`
     });
 
     saveAssetsToStorage(assets);
-    saveHistoryToStorage(transactionHistory);
+    saveHistoryToStorage(
+        transactionHistory
+    );
 
-    loadMarketData();
+    if (
+        typeof initializeStockPrices ===
+        "function"
+    ) {
+        await initializeStockPrices();
+    } else {
+        await loadMarketData();
+    }
 
     alert("銘柄を追加しました！");
 };
@@ -254,7 +341,9 @@ window.addNewAsset = function () {
 // 銘柄削除
 // =====================================
 
-window.deleteAsset = function (index) {
+window.deleteAsset = async function (
+    index
+) {
     const asset = assets[index];
 
     if (!asset) return;
@@ -265,7 +354,8 @@ window.deleteAsset = function (index) {
 
     if (!confirmed) return;
 
-    const deleted = assets.splice(index, 1)[0];
+    const deleted =
+        assets.splice(index, 1)[0];
 
     transactionHistory.unshift({
         id: Date.now(),
@@ -275,9 +365,18 @@ window.deleteAsset = function (index) {
     });
 
     saveAssetsToStorage(assets);
-    saveHistoryToStorage(transactionHistory);
+    saveHistoryToStorage(
+        transactionHistory
+    );
 
-    loadMarketData();
+    if (
+        typeof initializeStockPrices ===
+        "function"
+    ) {
+        await initializeStockPrices();
+    } else {
+        await loadMarketData();
+    }
 
     alert("削除しました");
 };
