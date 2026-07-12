@@ -1,24 +1,26 @@
 // =====================================
-// Portfolio Analytics v1.0
-// ジャンル別合計・資産推移
+// Portfolio Analytics v1.1
+// ジャンル別合計・資産推移・期間統計
 // =====================================
 
 const ASSET_HISTORY_KEY =
     "bitcoin1070_v3_asset_history";
 
-const ASSET_HISTORY_MAX_DAYS = 400;
+const ASSET_HISTORY_MAX_DAYS = 1000;
 
 let assetHistoryChartInstance = null;
 let selectedHistoryDays = 30;
 
 // =====================================
-// 履歴の保存・読み込み
+// 保存・読込
 // =====================================
 
 function loadAssetHistory() {
     try {
         const saved =
-            localStorage.getItem(ASSET_HISTORY_KEY);
+            localStorage.getItem(
+                ASSET_HISTORY_KEY
+            );
 
         if (!saved) {
             return [];
@@ -30,11 +32,18 @@ function loadAssetHistory() {
             return [];
         }
 
-        return parsed.filter(item =>
-            item &&
-            typeof item.date === "string" &&
-            Number.isFinite(Number(item.total))
-        );
+        return parsed
+            .filter(item =>
+                item &&
+                typeof item.date === "string" &&
+                Number.isFinite(
+                    Number(item.total)
+                )
+            )
+            .sort(
+                (a, b) =>
+                    a.date.localeCompare(b.date)
+            );
 
     } catch (error) {
         console.error(
@@ -64,7 +73,9 @@ function saveAssetHistory(history) {
 // 日付
 // =====================================
 
-function getLocalDateKey(date = new Date()) {
+function getLocalDateKey(
+    date = new Date()
+) {
     const year = date.getFullYear();
 
     const month =
@@ -80,7 +91,9 @@ function getLocalDateKey(date = new Date()) {
 
 function formatHistoryDate(dateString) {
     const date =
-        new Date(`${dateString}T00:00:00`);
+        new Date(
+            `${dateString}T00:00:00`
+        );
 
     return date.toLocaleDateString(
         "ja-JP",
@@ -95,7 +108,9 @@ function formatHistoryDate(dateString) {
 // ジャンル別集計
 // =====================================
 
-function calculateCategoryTotals(evaluations) {
+function calculateCategoryTotals(
+    evaluations
+) {
     const totals = {
         crypto: 0,
         jp: 0,
@@ -105,7 +120,9 @@ function calculateCategoryTotals(evaluations) {
 
     evaluations.forEach(asset => {
         const value =
-            Number(asset.marketValueJpy) || 0;
+            Number(
+                asset.marketValueJpy
+            ) || 0;
 
         totals.total += value;
 
@@ -125,39 +142,40 @@ function calculateCategoryTotals(evaluations) {
     return totals;
 }
 
-// =====================================
-// ジャンル別資産表示
-// =====================================
-
 function renderCategoryTotals(totals) {
-    const cryptoElement =
-        document.getElementById("cryptoTotal");
+    const crypto =
+        document.getElementById(
+            "cryptoTotal"
+        );
 
-    const jpElement =
-        document.getElementById("jpStockTotal");
+    const jp =
+        document.getElementById(
+            "jpStockTotal"
+        );
 
-    const usElement =
-        document.getElementById("usStockTotal");
+    const us =
+        document.getElementById(
+            "usStockTotal"
+        );
 
-    if (cryptoElement) {
-        cryptoElement.textContent =
+    if (crypto) {
+        crypto.textContent =
             formatYen(totals.crypto);
     }
 
-    if (jpElement) {
-        jpElement.textContent =
+    if (jp) {
+        jp.textContent =
             formatYen(totals.jp);
     }
 
-    if (usElement) {
-        usElement.textContent =
+    if (us) {
+        us.textContent =
             formatYen(totals.us);
     }
 }
 
 // =====================================
-// 今日の資産を記録
-// 同じ日は最新金額に更新
+// 1日1件の資産記録
 // =====================================
 
 function recordDailyAssetTotal(totals) {
@@ -170,19 +188,24 @@ function recordDailyAssetTotal(totals) {
             item => item.date === today
         );
 
-    const todayData = {
+    const record = {
         date: today,
-        total: Math.round(totals.total),
-        crypto: Math.round(totals.crypto),
+        total: Math.round(
+            totals.total
+        ),
+        crypto: Math.round(
+            totals.crypto
+        ),
         jp: Math.round(totals.jp),
         us: Math.round(totals.us),
-        updatedAt: new Date().toISOString()
+        updatedAt:
+            new Date().toISOString()
     };
 
     if (todayIndex >= 0) {
-        history[todayIndex] = todayData;
+        history[todayIndex] = record;
     } else {
-        history.push(todayData);
+        history.push(record);
     }
 
     history.sort(
@@ -206,19 +229,27 @@ function recordDailyAssetTotal(totals) {
 }
 
 // =====================================
-// 指定日数の履歴
+// 期間抽出
 // =====================================
 
 function filterHistoryByDays(
     history,
     days
 ) {
+    if (days === "all") {
+        return [...history];
+    }
+
+    const numericDays =
+        Number(days) || 30;
+
     const startDate = new Date();
 
     startDate.setHours(0, 0, 0, 0);
 
     startDate.setDate(
-        startDate.getDate() - (days - 1)
+        startDate.getDate() -
+        (numericDays - 1)
     );
 
     return history.filter(item => {
@@ -229,6 +260,104 @@ function filterHistoryByDays(
 
         return itemDate >= startDate;
     });
+}
+
+// =====================================
+// 統計表示
+// =====================================
+
+function renderHistoryStatistics(
+    history
+) {
+    const changeElement =
+        document.getElementById(
+            "historyChange"
+        );
+
+    const rateElement =
+        document.getElementById(
+            "historyRate"
+        );
+
+    const highElement =
+        document.getElementById(
+            "historyHigh"
+        );
+
+    const lowElement =
+        document.getElementById(
+            "historyLow"
+        );
+
+    if (history.length === 0) {
+        [changeElement,
+         rateElement,
+         highElement,
+         lowElement]
+            .forEach(element => {
+                if (element) {
+                    element.textContent =
+                        "--";
+                }
+            });
+
+        return;
+    }
+
+    const values =
+        history.map(item =>
+            Number(item.total) || 0
+        );
+
+    const first = values[0];
+    const last =
+        values[values.length - 1];
+
+    const difference =
+        last - first;
+
+    const rate =
+        first > 0
+            ? difference / first * 100
+            : 0;
+
+    const high = Math.max(...values);
+    const low = Math.min(...values);
+
+    const profitClass =
+        difference > 0
+            ? "profit-positive"
+            : difference < 0
+                ? "profit-negative"
+                : "profit-neutral";
+
+    if (changeElement) {
+        changeElement.className =
+            profitClass;
+
+        changeElement.textContent =
+            `${difference >= 0 ? "+" : ""}` +
+            formatYen(difference);
+    }
+
+    if (rateElement) {
+        rateElement.className =
+            profitClass;
+
+        rateElement.textContent =
+            `${rate >= 0 ? "+" : ""}` +
+            `${rate.toFixed(2)}%`;
+    }
+
+    if (highElement) {
+        highElement.textContent =
+            formatYen(high);
+    }
+
+    if (lowElement) {
+        lowElement.textContent =
+            formatYen(low);
+    }
 }
 
 // =====================================
@@ -250,7 +379,7 @@ function drawAssetHistoryChart(
 
     if (typeof Chart === "undefined") {
         console.error(
-            "Chart.jsが読み込まれていません"
+            "Chart.jsがありません"
         );
 
         return;
@@ -263,16 +392,21 @@ function drawAssetHistoryChart(
         );
 
     if (assetHistoryChartInstance) {
-        assetHistoryChartInstance.destroy();
-        assetHistoryChartInstance = null;
+        assetHistoryChartInstance
+            .destroy();
+
+        assetHistoryChartInstance =
+            null;
     }
 
     const labels =
         filtered.map(item =>
-            formatHistoryDate(item.date)
+            formatHistoryDate(
+                item.date
+            )
         );
 
-    const values =
+    const totalValues =
         filtered.map(item =>
             Number(item.total) || 0
         );
@@ -287,12 +421,12 @@ function drawAssetHistoryChart(
                 datasets: [
                     {
                         label: "総資産",
-                        data: values,
+                        data: totalValues,
                         tension: 0.25,
                         fill: true,
                         borderWidth: 3,
                         pointRadius:
-                            values.length <= 10
+                            totalValues.length <= 14
                                 ? 4
                                 : 1,
                         pointHoverRadius: 6
@@ -346,6 +480,10 @@ function drawAssetHistoryChart(
             }
         });
 
+    renderHistoryStatistics(
+        filtered
+    );
+
     updateHistoryStatus(
         filtered,
         days
@@ -369,6 +507,11 @@ function updateHistoryStatus(
         return;
     }
 
+    const periodText =
+        days === "all"
+            ? "全期間"
+            : `${days}日`;
+
     if (filtered.length === 0) {
         status.textContent =
             "まだ資産履歴がありません";
@@ -378,36 +521,14 @@ function updateHistoryStatus(
 
     if (filtered.length === 1) {
         status.textContent =
-            `本日から記録開始。${days}日表示には今後の記録が追加されます。`;
+            "本日から記録開始。毎日開くと履歴が増えます。";
 
         return;
     }
 
-    const first =
-        Number(filtered[0].total) || 0;
-
-    const last =
-        Number(
-            filtered[
-                filtered.length - 1
-            ].total
-        ) || 0;
-
-    const difference =
-        last - first;
-
-    const rate =
-        first > 0
-            ? difference / first * 100
-            : 0;
-
-    const sign =
-        difference > 0 ? "+" : "";
-
     status.textContent =
-        `${days}日表示｜変動：` +
-        `${sign}${formatYen(difference)} ` +
-        `（${sign}${rate.toFixed(2)}%）`;
+        `${periodText}表示｜` +
+        `${filtered.length}日分の記録`;
 }
 
 // =====================================
@@ -424,10 +545,13 @@ function setupHistoryPeriodButtons() {
         button.addEventListener(
             "click",
             () => {
+                const value =
+                    button.dataset.days;
+
                 selectedHistoryDays =
-                    Number(
-                        button.dataset.days
-                    ) || 30;
+                    value === "all"
+                        ? "all"
+                        : Number(value);
 
                 buttons.forEach(item =>
                     item.classList.remove(
@@ -449,7 +573,7 @@ function setupHistoryPeriodButtons() {
 
     const initialButton =
         document.querySelector(
-            `.period-buttons button[data-days="${selectedHistoryDays}"]`
+            '.period-buttons button[data-days="30"]'
         );
 
     if (initialButton) {
@@ -478,7 +602,9 @@ function updatePortfolioAnalytics(
     renderCategoryTotals(totals);
 
     const history =
-        recordDailyAssetTotal(totals);
+        recordDailyAssetTotal(
+            totals
+        );
 
     drawAssetHistoryChart(
         history,
@@ -487,7 +613,7 @@ function updatePortfolioAnalytics(
 }
 
 // =====================================
-// portfolio.jsの更新処理へ接続
+// portfolio.jsへ接続
 // =====================================
 
 const originalRefreshPortfolio =
