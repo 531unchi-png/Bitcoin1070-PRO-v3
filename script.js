@@ -467,3 +467,26 @@ document.addEventListener(
         );
     }
 );
+// ===============================
+// PWA登録
+// ===============================
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener(
+        "load",
+        () => {
+            navigator.serviceWorker
+                .register("./service-worker.js")
+                .then(() => {
+                    console.log(
+                        "Service Worker登録完了"
+                    );
+                })
+                .catch(error => {
+                    console.error(
+                        error
+                    );
+                });
+        }
+    );
+}
