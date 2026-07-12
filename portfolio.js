@@ -10,91 +10,11 @@
 // 米国株 = ドル
 // =====================================
 
-const DEFAULT_ASSETS = [
-    {
-        symbol: "BTC",
-        name: "Bitcoin",
-        type: "crypto",
-        amount: 0.00774,
-        cost: 9800000,
-        coinGeckoId: "bitcoin"
-    },
-    {
-        symbol: "ETH",
-        name: "Ethereum",
-        type: "crypto",
-        amount: 0.1,
-        cost: 420000,
-        coinGeckoId: "ethereum"
-    },
-    {
-        symbol: "XRP",
-        name: "XRP",
-        type: "crypto",
-        amount: 118.32089,
-        cost: 300,
-        coinGeckoId: "ripple"
-    },
-    {
-        symbol: "SOL",
-        name: "Solana",
-        type: "crypto",
-        amount: 5.91,
-        cost: 22000,
-        coinGeckoId: "solana"
-    },
-    {
-        symbol: "SUI",
-        name: "SUI",
-        type: "crypto",
-        amount: 60.8529,
-        cost: 450,
-        coinGeckoId: "sui"
-    },
-    {
-        symbol: "RENDER",
-        name: "Render",
-        type: "crypto",
-        amount: 249.35,
-        cost: 1200,
-        coinGeckoId: "render-token"
-    },
-    {
-        symbol: "NVDA",
-        name: "NVIDIA",
-        type: "us",
-        amount: 15,
-        cost: 188
-    },
-    {
-        symbol: "MHI",
-        name: "三菱重工",
-        type: "jp",
-        amount: 43,
-        cost: 2850
-    },
-    {
-        symbol: "ADVT",
-        name: "アドバンテスト",
-        type: "jp",
-        amount: 8,
-        cost: 9800
-    },
-    {
-        symbol: "FJK",
-        name: "フジクラ",
-        type: "jp",
-        amount: 2,
-        cost: 5100
-    },
-    {
-        symbol: "VRAIN",
-        name: "VRAIN Solution",
-        type: "jp",
-        amount: 8,
-        cost: 4000
-    }
-];
+// =====================================
+// 初期資産
+// =====================================
+
+const DEFAULT_ASSETS = [];
 
 // =====================================
 // アプリ状態
