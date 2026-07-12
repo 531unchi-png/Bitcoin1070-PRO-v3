@@ -689,7 +689,7 @@ function updatePortfolioAnalytics(
         );
 
     renderCategoryTotals(totals);
-
+    drawCategoryChart(totals);
     const history =
         recordDailyAssetTotal(
             totals
