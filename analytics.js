@@ -9,6 +9,7 @@ const ASSET_HISTORY_KEY =
 const ASSET_HISTORY_MAX_DAYS = 1000;
 
 let assetHistoryChartInstance = null;
+let categoryChartInstance = null;
 let selectedHistoryDays = 30;
 
 // =====================================
@@ -172,6 +173,94 @@ function renderCategoryTotals(totals) {
         us.textContent =
             formatYen(totals.us);
     }
+}
+// =====================================
+// ジャンル別円グラフ
+// =====================================
+
+function drawCategoryChart(totals) {
+    const canvas =
+        document.getElementById(
+            "categoryChart"
+        );
+
+    if (!canvas) {
+        return;
+    }
+
+    if (typeof Chart === "undefined") {
+        return;
+    }
+
+    if (categoryChartInstance) {
+        categoryChartInstance.destroy();
+        categoryChartInstance = null;
+    }
+
+    const labels = [
+        "仮想通貨",
+        "日本株",
+        "米国株"
+    ];
+
+    const values = [
+        Math.round(totals.crypto),
+        Math.round(totals.jp),
+        Math.round(totals.us)
+    ];
+
+    categoryChartInstance =
+        new Chart(canvas, {
+            type: "doughnut",
+
+            data: {
+                labels,
+
+                datasets: [{
+                    data: values,
+                    borderWidth: 1,
+                    hoverOffset: 12
+                }]
+            },
+
+            options: {
+                responsive: true,
+                cutout: "55%",
+
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    },
+
+                    tooltip: {
+                        callbacks: {
+                            label(context) {
+                                const value =
+                                    Number(context.raw) || 0;
+
+                                const total =
+                                    values.reduce(
+                                        (sum, item) =>
+                                            sum + item,
+                                        0
+                                    );
+
+                                const rate =
+                                    total > 0
+                                        ? value / total * 100
+                                        : 0;
+
+                                return (
+                                    `${context.label}：` +
+                                    `${formatYen(value)} ` +
+                                    `(${rate.toFixed(1)}%)`
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        });
 }
 
 // =====================================
