@@ -648,3 +648,51 @@ footer p {
         font-size: 11px;
     }
 }
+/* =====================================
+   Asset history statistics
+===================================== */
+
+.period-buttons {
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+}
+
+.history-stats {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.history-stat {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+}
+
+.history-stat span {
+    display: block;
+    margin-bottom: 5px;
+    color: #9faac0;
+    font-size: 11px;
+}
+
+.history-stat strong {
+    display: block;
+    font-size: 15px;
+}
+
+@media (max-width: 600px) {
+
+    .history-stats {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .period-buttons {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+}
