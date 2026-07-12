@@ -11,6 +11,7 @@ const ASSET_HISTORY_MAX_DAYS = 1000;
 let assetHistoryChartInstance = null;
 let categoryChartInstance = null;
 let selectedHistoryDays = 30;
+let selectedHistorySeries = "total";
 
 // =====================================
 // 保存・読込
