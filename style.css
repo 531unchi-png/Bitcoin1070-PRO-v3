@@ -578,3 +578,73 @@ footer p {
         text-align: left;
     }
 }
+/* =====================================
+   Category summary
+===================================== */
+
+.category-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.category-box {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+}
+
+.category-box span {
+    display: block;
+    margin-bottom: 7px;
+    color: #aeb9ce;
+    font-size: 13px;
+}
+
+.category-box strong {
+    display: block;
+    font-size: 20px;
+}
+
+/* =====================================
+   Asset history
+===================================== */
+
+.period-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
+    margin-bottom: 18px;
+}
+
+.period-buttons button {
+    min-height: 38px;
+    padding: 8px 5px;
+    font-size: 12px;
+}
+
+.period-buttons button.active {
+    outline: 2px solid #ffd16b;
+    background: linear-gradient(135deg, #ffae35, #f0780b);
+}
+
+#assetHistoryChart {
+    width: 100% !important;
+    max-height: 380px;
+}
+
+@media (max-width: 600px) {
+    .category-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .period-buttons {
+        gap: 4px;
+    }
+
+    .period-buttons button {
+        padding: 7px 2px;
+        font-size: 11px;
+    }
+}
