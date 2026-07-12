@@ -1,1 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Bitcoin1070 PRO v3.0</title>
+
+<link rel="stylesheet"
+href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>₿ Bitcoin1070 PRO</h1>
+
+<p>
+
+AI × Bitcoin × 日本株 × 米国株
+
+</p>
+
+</header>
+
+<div class="container">
+
+<!-- ========================= -->
+<!-- 総資産 -->
+<!-- ========================= -->
+
+<div class="card">
+
+<h2>💰 総資産</h2>
+
+<h1 id="totalAsset">
+
+¥0
+
+</h1>
+
+<p id="assetComment">
+
+読み込み中...
+
+</p>
+
+</div>
+
+<!-- ========================= -->
+<!-- 保有資産 -->
+<!-- ========================= -->
+
+<div class="card">
+
+<h2>📊 保有資産</h2>
+
+<div id="portfolioList">
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 編集 -->
+<!-- ========================= -->
+
+<div class="card">
+
+<h2>
+
+✏️ 保有資産編集
+
+</h2>
+
+<div id="editor">
+
+</div>
+
+<button id="saveButton">
+
+💾 保存
+
+</button>
+
+</div>
+
+<!-- ========================= -->
+<!-- 円グラフ -->
+<!-- ========================= -->
+
+<div class="card">
+
+<h2>
+
+🥧 資産構成
+
+</h2>
+
+<canvas id="assetChart">
+
+</canvas>
+
+</div>
+
+<!-- ========================= -->
+<!-- BTC情報 -->
+<!-- ========================= -->
+
+<div class="grid">
+
+<div class="card">
+
+<div class="title">
+
+BTC価格
+
+</div>
+
+<div
+class="big"
+id="btcPrice">
+
+取得中...
+
+</div>
+
+<div class="small">
+
+24時間変動
+
+<span id="btcChange">
+
+--
+
+</span>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">
+
+Fear & Greed
+
+</div>
+
+<div
+class="big"
+id="fear">
+
+取得中...
+
+</div>
+
+</div>
+
+</div>
+  <!-- ========================= -->
+<!-- AIマーケット分析 -->
+<!-- ========================= -->
+
+<div class="card">
+
+    <div class="title">
+        🤖 AIマーケット分析
+    </div>
+
+    <div class="ai" id="aiComment">
+        分析中...
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 1070日理論 -->
+<!-- ========================= -->
+
+<div class="grid">
+
+    <div class="card">
+
+        <div class="title">
+            1070日カウント
+        </div>
+
+        <div class="big" id="days">
+            --
+        </div>
+
+        <div class="small">
+            前回底からの経過日数
+        </div>
+
+        <div class="progress">
+
+            <div
+                class="progress-bar"
+                id="progressBar">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="title">
+            半減期カウント
+        </div>
+
+        <div class="big" id="halving">
+            --
+        </div>
+
+        <div class="small">
+            次回半減期まで
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- TradingView -->
+<!-- ========================= -->
+
+<div class="card">
+
+    <div class="title">
+        TradingView
+    </div>
+
+    <div
+        id="tradingview"
+        style="height:650px;">
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 資産ランキング -->
+<!-- ========================= -->
+
+<div class="card">
+
+    <h2>🏆 資産ランキング</h2>
+
+    <div id="rankingList">
+
+        読み込み中...
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 取引履歴 -->
+<!-- ========================= -->
+
+<div class="card">
+
+    <h2>📒 取引履歴</h2>
+
+    <div id="historyList">
+
+        まだ履歴はありません
+
+    </div>
+
+</div>
+  <!-- ========================= -->
+<!-- 設定 -->
+<!-- ========================= -->
+
+<div class="card">
+
+    <h2>⚙️ 設定</h2>
+
+    <div class="setting-menu">
+
+        <button id="backupBtn">
+            💾 バックアップ
+        </button>
+
+        <button id="restoreBtn">
+            📂 復元
+        </button>
+
+        <button id="resetBtn">
+            🗑 データ初期化
+        </button>
+
+    </div>
+
+</div>
+
+<footer>
+
+    <p>
+        Bitcoin1070 PRO v3.0
+    </p>
+
+    <p>
+        © 2026 Hayashibe Project
+    </p>
+
+</footer>
+
+</div>
+
+<!-- ========================= -->
+<!-- JavaScript -->
+<!-- ========================= -->
+
+<script src="stocks.js"></script>
+<script src="storage.js"></script>
+<script src="chart.js"></script>
+<script src="portfolio.js"></script>
+<script src="script.js"></script>
+
+</body>
+
+</html>
