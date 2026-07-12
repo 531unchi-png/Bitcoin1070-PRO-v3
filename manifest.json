@@ -1,0 +1,26 @@
+{
+  "name": "Bitcoin1070 PRO",
+  "short_name": "BTC1070",
+  "description": "資産管理・テクニカル分析・AI投資支援アプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07101f",
+  "theme_color": "#f58a0a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.PNG",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
