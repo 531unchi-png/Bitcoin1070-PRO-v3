@@ -1026,17 +1026,6 @@ function updatePortfolioAnalytics(
 // portfolio.jsの更新処理へ接続
 // =====================================
 
-const originalRefreshPortfolio =
-    refreshPortfolio;
-
-refreshPortfolio =
-    function () {
-        originalRefreshPortfolio();
-
-        updatePortfolioAnalytics(
-            latestEvaluations
-        );
-    };
 
 // =====================================
 // 起動
