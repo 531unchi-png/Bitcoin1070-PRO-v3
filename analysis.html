@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f58a0a">
+<title>保有銘柄分析 | Bitcoin1070 PRO</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="subpage-header">
+    <a class="back-button" href="index.html">← 戻る</a>
+    <h1>🧠 保有銘柄分析</h1>
+    <p>保有銘柄をまとめてテクニカル分析します</p>
+</header>
+<main class="container subpage-container">
+    <div class="card">
+        <p class="small">MACD・RSI・移動平均線・出来高・ボリンジャーバンド・サポレジ・52週高安からAIスコアと売買目安を算出します。</p>
+        <button type="button" id="technicalAnalysisBtn" class="full-width-button">🔍 保有銘柄を分析</button>
+    </div>
+    <div class="card">
+        <h2>🚦 AI売買シグナル</h2>
+        <div id="signalDashboard">分析するとランキングを表示します</div>
+    </div>
+    <div class="card">
+        <h2>📊 詳細分析</h2>
+        <div id="technicalAnalysisList">上の「保有銘柄を分析」を押してください</div>
+    </div>
+    <a class="page-link-button secondary-page-link" href="index.html">← ホームへ戻る</a>
+</main>
+<script src="storage.js"></script>
+<script src="stocks.js"></script>
+<script src="portfolio.js"></script>
+<script src="monitoring.js"></script>
+<script src="technical.js"></script>
+</body>
+</html>

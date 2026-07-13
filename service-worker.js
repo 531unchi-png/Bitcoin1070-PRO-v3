@@ -1,19 +1,22 @@
 // =====================================
-// Bitcoin1070 PRO Service Worker v5.0
+// Bitcoin1070 PRO Service Worker v5.1
 // =====================================
 
 const CACHE_NAME =
-    "bitcoin1070-pro-v5";
+    "bitcoin1070-pro-v5-1";
 
 const APP_FILES = [
     "./",
     "./index.html",
+    "./portfolio-edit.html",
+    "./analysis.html",
     "./style.css",
     "./storage.js",
     "./stocks.js",
     "./chart.js",
     "./portfolio.js",
     "./editor.js",
+    "./asset-editor-page.js",
     "./analytics.js",
     "./technical.js",
     "./monitoring.js",
