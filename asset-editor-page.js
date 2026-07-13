@@ -72,7 +72,21 @@ function saveChanges() {
     saveAssetsToStorage(assets);
     transactionHistory.unshift({ id: Date.now(), date: new Date().toISOString(), action: "保有資産を編集" });
     saveHistoryToStorage(transactionHistory);
-    alert("変更を保存しました！");
+    const button = document.getElementById("saveButton");
+    if (button) {
+        const oldText = button.textContent;
+        button.textContent = "✅ 保存しました";
+        button.disabled = true;
+        setTimeout(() => { button.textContent = oldText; button.disabled = false; }, 1400);
+    }
+    let feedback = document.getElementById("saveFeedback");
+    if (!feedback) {
+        feedback = document.createElement("div");
+        feedback.id = "saveFeedback";
+        feedback.className = "save-feedback";
+        document.querySelector(".sticky-save-bar")?.appendChild(feedback);
+    }
+    feedback.textContent = "ホーム・資産ページにも保存内容が反映されました。";
     renderAssetEditor();
 }
 
