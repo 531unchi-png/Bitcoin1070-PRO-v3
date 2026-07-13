@@ -775,6 +775,7 @@ footer p {
     width: 100%;
     max-width: 430px;
 
+    -webkit-backdrop-filter: blur(10px);
     max-height: 88vh;
 　　　overflow-y: auto;
 
