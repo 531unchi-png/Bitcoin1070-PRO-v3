@@ -670,6 +670,10 @@ function refreshPortfolio() {
     renderHistory();
     updatePortfolioChart(evaluations);
 
+    if (typeof updateMonitoringDashboard === "function") {
+        updateMonitoringDashboard(evaluations);
+    }
+
     if (typeof updatePortfolioAnalytics === "function") {
 
         updatePortfolioAnalytics(evaluations);

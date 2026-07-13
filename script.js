@@ -253,6 +253,29 @@ function update1070Theory() {
             `${progress.toFixed(1)}%`;
     }
 
+    const targetDate = new Date(BTC_BOTTOM_DATE);
+    targetDate.setDate(targetDate.getDate() + THEORY_DAYS);
+
+    const targetElement = document.getElementById("theoryTarget");
+    const phaseElement = document.getElementById("theoryPhase");
+    const remainingDays = THEORY_DAYS - elapsedDays;
+
+    if (targetElement) {
+        targetElement.textContent = remainingDays >= 0
+            ? `1070日まであと${remainingDays.toLocaleString("ja-JP")}日（${targetDate.toLocaleDateString("ja-JP")}）`
+            : `1070日を${Math.abs(remainingDays).toLocaleString("ja-JP")}日通過（到達日 ${targetDate.toLocaleDateString("ja-JP")}）`;
+    }
+
+    if (phaseElement) {
+        phaseElement.textContent = progress < 50
+            ? "🌱 前半：仕込み・成長局面"
+            : progress < 80
+                ? "📈 後半：上昇加速に注意"
+                : progress < 100
+                    ? "🔥 終盤：過熱と急落を警戒"
+                    : "⚠️ 1070日通過後：天井確認を優先";
+    }
+
     return {
         elapsedDays,
         progress

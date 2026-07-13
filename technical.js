@@ -978,6 +978,7 @@ async function analyzeAllTechnicalAssets() {
         "市場データを取得して分析しています...";
 
     const results = [];
+    const signalResults = [];
 
     for (const asset of assets) {
         container.innerHTML =
@@ -988,6 +989,8 @@ async function analyzeAllTechnicalAssets() {
                 await analyzeTechnicalAsset(
                     asset
                 );
+
+            signalResults.push(result);
 
             results.push(
                 renderTechnicalResult(
@@ -1012,6 +1015,10 @@ async function analyzeAllTechnicalAssets() {
 
     container.innerHTML =
         results.join("");
+
+    if (typeof updateSignalDashboard === "function") {
+        updateSignalDashboard(signalResults);
+    }
 
     technicalAnalysisRunning =
         false;

@@ -975,3 +975,16 @@ footer p {
 .technical-section-title{margin-top:16px;padding:9px 11px;border-radius:10px;background:rgba(245,138,10,.12);font-weight:800;font-size:14px;}
 .technical-disclaimer{margin:10px 0 0;font-size:11px;line-height:1.5;opacity:.7;}
 .technical-card .asset-row strong{max-width:62%;text-align:right;overflow-wrap:anywhere;}
+
+
+/* v5.0 Monitoring Dashboard */
+.theory-details{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:12px;line-height:1.5;color:rgba(255,255,255,.78)}
+.watch-item{margin-top:12px;padding:14px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(255,255,255,.025)}
+.watch-item.favorite{border-color:rgba(245,138,10,.5);background:rgba(245,138,10,.06)}
+.watch-header{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}.watch-header div{display:flex;flex-direction:column}.watch-header span,.signal-row small{font-size:11px;opacity:.68}
+.star-button{min-height:auto;padding:4px 7px;background:transparent;border:0;font-size:23px}.watch-metrics{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:12px}
+.alert-status{margin:10px 0 0;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.06);font-size:12px}.alert-status.triggered{background:rgba(219,68,83,.2);font-weight:800}
+.alert-editor{margin-top:10px}.alert-editor summary{cursor:pointer;font-size:12px;font-weight:700}.alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.alert-grid label{font-size:11px}.alert-grid input{width:100%;box-sizing:border-box;margin-top:5px}
+.alert-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.secondary-button{background:#303848!important}
+.signal-row{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}.signal-row:last-child{border-bottom:0}.signal-rank{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(245,138,10,.16);font-weight:800}.signal-row>div{display:flex;flex-direction:column}.signal-score{text-align:right}
+@media(max-width:520px){.alert-grid{grid-template-columns:1fr}.watch-header{grid-template-columns:auto 1fr}.watch-header>strong{grid-column:2}.watch-metrics{flex-direction:column;gap:5px}}
