@@ -480,23 +480,96 @@ id="fear">
 <script src="technical.js"></script>
 <script src="script.js"></script>
     
- <!-- 初回チュートリアル -->
+<!-- ========================= -->
+<!-- 初回チュートリアル -->
+<!-- ========================= -->
 
 <div id="tutorial" class="tutorial hidden">
 
     <div class="tutorial-card">
 
-        <h2>👋 ようこそ！</h2>
+        <button
+            type="button"
+            id="tutorialClose"
+            class="tutorial-close"
+            aria-label="チュートリアルを閉じる">
+            ×
+        </button>
+
+        <div id="tutorialIcon" class="tutorial-icon">
+            👋
+        </div>
+
+        <h2 id="tutorialTitle">
+            Bitcoin1070 PROへようこそ！
+        </h2>
 
         <p id="tutorialText">
-            Bitcoin1070 PROへようこそ！
+            資産管理とテクニカル分析を、ひとつのアプリで確認できます。
         </p>
 
-        <button id="tutorialNext">
+        <div
+            id="tutorialHomeGuide"
+            class="tutorial-home-guide hidden">
+
+            <div class="iphone-guide">
+
+                <div class="iphone-guide-screen">
+
+                    <div class="iphone-guide-url">
+                        Bitcoin1070 PRO
+                    </div>
+
+                    <div class="iphone-guide-arrow">
+                        ↓
+                    </div>
+
+                    <div class="iphone-guide-share">
+                        ① Safari下部の「共有」□↑
+                    </div>
+
+                    <div class="iphone-guide-arrow">
+                        ↓
+                    </div>
+
+                    <div class="iphone-guide-add">
+                        ②「ホーム画面に追加」
+                    </div>
+
+                    <div class="iphone-guide-arrow">
+                        ↓
+                    </div>
+
+                    <div class="iphone-guide-finish">
+                        ③ 右上の「追加」
+                    </div>
+
+                </div>
+
+            </div>
+
+            <p class="tutorial-note">
+                ※iPhoneではSafariで開いてください
+            </p>
+
+        </div>
+
+        <div class="tutorial-progress">
+            <span class="tutorial-dot active"></span>
+            <span class="tutorial-dot"></span>
+            <span class="tutorial-dot"></span>
+            <span class="tutorial-dot"></span>
+        </div>
+
+        <button
+            type="button"
+            id="tutorialNext">
             次へ →
         </button>
 
     </div>
+
+</div>
 
 </div>
 
