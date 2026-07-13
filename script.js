@@ -490,3 +490,66 @@ if ("serviceWorker" in navigator) {
         }
     );
 }
+const tutorialTexts = [
+
+"👋 Bitcoin1070 PROへようこそ！",
+
+"💰 まずは保有資産を入力しましょう",
+
+"📱 ホーム画面へ追加するとアプリのように使えます",
+
+"🤖 AI分析で売買タイミングをチェックできます",
+
+"🚀 準備完了！"
+
+];
+
+let tutorialStep = 0;
+
+function startTutorial(){
+
+if(localStorage.getItem("tutorialDone")) return;
+
+document
+.getElementById("tutorial")
+.classList.remove("hidden");
+
+showTutorial();
+
+}
+
+function showTutorial(){
+
+document.getElementById("tutorialText").textContent=
+
+tutorialTexts[tutorialStep];
+
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+startTutorial();
+
+document
+.getElementById("tutorialNext")
+.addEventListener("click",()=>{
+
+tutorialStep++;
+
+if(tutorialStep>=tutorialTexts.length){
+
+localStorage.setItem("tutorialDone","yes");
+
+document
+.getElementById("tutorial")
+.classList.add("hidden");
+
+return;
+
+}
+
+showTutorial();
+
+});
+
+});
