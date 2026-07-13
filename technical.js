@@ -1,6 +1,6 @@
 // =====================================
-// Technical Analysis Engine v1.0
-// MACD・RSI・移動平均線・出来高
+// Technical Analysis Engine v4.0
+// MACD・RSI・移動平均線・出来高・BB・サポレジ・52週高安・売買目安
 // =====================================
 
 const TECHNICAL_SYMBOL_MAP = {
@@ -451,177 +451,126 @@ function calculateVolumeAnalysis(
     };
 }
 
+
+// =====================================
+// v4.0追加指標
+// =====================================
+function calculateStdDev(values) {
+    if (!values.length) return 0;
+    const mean = values.reduce((a,b)=>a+Number(b),0)/values.length;
+    return Math.sqrt(values.reduce((sum,v)=>sum+Math.pow(Number(v)-mean,2),0)/values.length);
+}
+
+function calculateBollingerBands(closes, period = 20, multiplier = 2) {
+    const selected = closes.slice(-period);
+    if (selected.length < period) return { middle:0, upper:0, lower:0, bandwidth:0, position:50 };
+    const middle = selected.reduce((a,b)=>a+b,0)/period;
+    const deviation = calculateStdDev(selected);
+    const upper = middle + deviation * multiplier;
+    const lower = middle - deviation * multiplier;
+    const current = closes[closes.length-1];
+    return {
+        middle: technicalRound(middle,2), upper: technicalRound(upper,2), lower: technicalRound(lower,2),
+        bandwidth: middle > 0 ? technicalRound((upper-lower)/middle*100,2) : 0,
+        position: upper > lower ? technicalRound((current-lower)/(upper-lower)*100,1) : 50
+    };
+}
+
+function calculateATR(candles, period = 14) {
+    if (candles.length <= period) return 0;
+    const ranges=[];
+    for(let i=1;i<candles.length;i++){
+        const h=Number(candles[i].high), l=Number(candles[i].low), pc=Number(candles[i-1].close);
+        ranges.push(Math.max(h-l, Math.abs(h-pc), Math.abs(l-pc)));
+    }
+    const selected=ranges.slice(-period);
+    return selected.reduce((a,b)=>a+b,0)/selected.length;
+}
+
+function calculateSupportResistance(candles, currentPrice) {
+    const recent=candles.slice(-120);
+    const lows=[], highs=[];
+    for(let i=2;i<recent.length-2;i++){
+        const c=recent[i];
+        if(c.low<=recent[i-1].low && c.low<=recent[i-2].low && c.low<=recent[i+1].low && c.low<=recent[i+2].low) lows.push(Number(c.low));
+        if(c.high>=recent[i-1].high && c.high>=recent[i-2].high && c.high>=recent[i+1].high && c.high>=recent[i+2].high) highs.push(Number(c.high));
+    }
+    const supportCandidates=lows.filter(v=>v<currentPrice).sort((a,b)=>b-a);
+    const resistanceCandidates=highs.filter(v=>v>currentPrice).sort((a,b)=>a-b);
+    const fallbackLows=recent.map(c=>Number(c.low)).filter(v=>v<currentPrice).sort((a,b)=>b-a);
+    const fallbackHighs=recent.map(c=>Number(c.high)).filter(v=>v>currentPrice).sort((a,b)=>a-b);
+    return {
+        support: technicalRound(supportCandidates[0] ?? fallbackLows[0] ?? currentPrice,2),
+        resistance: technicalRound(resistanceCandidates[0] ?? fallbackHighs[0] ?? currentPrice,2)
+    };
+}
+
+function calculate52WeekRange(candles, currentPrice) {
+    const yearly=candles.slice(-260);
+    const high=Math.max(...yearly.map(c=>Number(c.high)||Number(c.close)));
+    const low=Math.min(...yearly.map(c=>Number(c.low)||Number(c.close)));
+    return {
+        high:technicalRound(high,2), low:technicalRound(low,2),
+        fromHigh:high>0?technicalRound((currentPrice-high)/high*100,1):0,
+        fromLow:low>0?technicalRound((currentPrice-low)/low*100,1):0,
+        position:high>low?technicalRound((currentPrice-low)/(high-low)*100,1):50
+    };
+}
+
+function calculateTradeLevels(currentPrice, atr, levels) {
+    const atrValue=atr || currentPrice*0.025;
+    const stopAtr=currentPrice-atrValue*1.5;
+    const stopSupport=levels.support*0.985;
+    const stop=Math.max(0, Math.min(currentPrice*0.99, Math.max(stopAtr, stopSupport)));
+    const target1=Math.max(currentPrice+atrValue*1.5, levels.resistance);
+    const target2=Math.max(currentPrice+atrValue*3, target1+atrValue);
+    const risk=currentPrice-stop;
+    return {
+        takeProfit1:technicalRound(target1,2), takeProfit2:technicalRound(target2,2), stopLoss:technicalRound(stop,2),
+        riskReward:risk>0?technicalRound((target1-currentPrice)/risk,2):0
+    };
+}
+
 // =====================================
 // スコア判定
 // =====================================
 
-function calculateTechnicalScore(
-    data
-) {
+function calculateTechnicalScore(data) {
     let score = 50;
-
     const reasons = [];
     const warnings = [];
+    const add=(points,text)=>{score+=points; reasons.push(text);};
+    const sub=(points,text)=>{score-=points; warnings.push(text);};
 
-    // 移動平均線
-    if (
-        data.ma5 >
-            data.ma25 &&
-        data.ma25 >
-            data.ma75
-    ) {
-        score += 20;
+    if(data.ma5>data.ma25 && data.ma25>data.ma75) add(14,"移動平均線が上昇配列");
+    else if(data.ma5<data.ma25 && data.ma25<data.ma75) sub(14,"移動平均線が下降配列");
+    if(data.currentPrice>data.ma25) add(6,"価格が25日線より上"); else sub(6,"価格が25日線より下");
+    if(data.macd.cross==="golden") add(12,"MACDゴールデンクロス");
+    else if(data.macd.cross==="dead") sub(12,"MACDデッドクロス");
+    else if(data.macd.macd>data.macd.signal) add(5,"MACDがシグナルより上"); else sub(5,"MACDがシグナルより下");
+    if(data.rsi>=45 && data.rsi<=65) add(5,"RSIが健全な上昇余地");
+    if(data.rsi>=75) sub(9,"RSIが強い買われすぎ"); else if(data.rsi>=70) sub(5,"RSIが買われすぎ圏");
+    if(data.rsi<=30) add(2,"RSIは売られすぎ圏（反発余地）");
+    if(data.volume.ratio>=1.3 && data.priceChange>=0) add(6,"上昇を伴う出来高増加");
+    if(data.volume.ratio>=1.3 && data.priceChange<0) sub(6,"下落を伴う出来高増加");
+    if(data.bollinger.position>=55 && data.bollinger.position<=90) add(6,"ボリンジャーバンド上側で推移");
+    if(data.bollinger.position>100) sub(5,"ボリンジャーバンド上限超えで過熱");
+    if(data.bollinger.position<0) add(2,"ボリンジャーバンド下限割れで反発余地");
+    if(data.week52.position>=70 && data.week52.position<95) add(7,"52週レンジ上位で強いトレンド");
+    if(data.week52.position>=95) sub(3,"52週高値圏で高値掴みに注意");
+    if(data.week52.position<=20) sub(5,"52週安値圏で下落トレンド警戒");
+    const supportDistance=(data.currentPrice-data.levels.support)/data.currentPrice*100;
+    const resistanceDistance=(data.levels.resistance-data.currentPrice)/data.currentPrice*100;
+    if(supportDistance>=0 && supportDistance<=4) add(5,"主要サポートが近く損切り設定しやすい");
+    if(resistanceDistance>=0 && resistanceDistance<=2) sub(4,"直上に強いレジスタンス");
+    if(data.tradeLevels.riskReward>=1.5) add(5,"利確候補までのリスクリワード良好");
+    else if(data.tradeLevels.riskReward<1) sub(5,"リスクリワードが低い");
 
-        reasons.push(
-            "5日・25日・75日線が上昇配列"
-        );
-    } else if (
-        data.ma5 <
-            data.ma25 &&
-        data.ma25 <
-            data.ma75
-    ) {
-        score -= 20;
-
-        warnings.push(
-            "移動平均線が下降配列"
-        );
-    }
-
-    // 現在価格と25日線
-    if (
-        data.currentPrice >
-        data.ma25
-    ) {
-        score += 10;
-
-        reasons.push(
-            "現在価格が25日線より上"
-        );
-    } else {
-        score -= 10;
-
-        warnings.push(
-            "現在価格が25日線より下"
-        );
-    }
-
-    // MACD
-    if (
-        data.macd.cross ===
-        "golden"
-    ) {
-        score += 18;
-
-        reasons.push(
-            "MACDがゴールデンクロス"
-        );
-
-    } else if (
-        data.macd.cross ===
-        "dead"
-    ) {
-        score -= 18;
-
-        warnings.push(
-            "MACDがデッドクロス"
-        );
-
-    } else if (
-        data.macd.macd >
-        data.macd.signal
-    ) {
-        score += 8;
-
-        reasons.push(
-            "MACDがシグナルより上"
-        );
-
-    } else {
-        score -= 8;
-
-        warnings.push(
-            "MACDがシグナルより下"
-        );
-    }
-
-    // RSI
-    if (
-        data.rsi >= 40 &&
-        data.rsi <= 60
-    ) {
-        score += 8;
-
-        reasons.push(
-            "RSIに強い過熱感なし"
-        );
-    }
-
-    if (data.rsi >= 70) {
-        score -= 12;
-
-        warnings.push(
-            "RSIが買われすぎ圏"
-        );
-    }
-
-    if (data.rsi <= 30) {
-        warnings.push(
-            "RSIが売られすぎ圏"
-        );
-    }
-
-    // 出来高
-    if (
-        data.volume.ratio >= 1.3
-    ) {
-        if (
-            data.priceChange >= 0
-        ) {
-            score += 8;
-
-            reasons.push(
-                "上昇を伴う出来高増加"
-            );
-        } else {
-            score -= 8;
-
-            warnings.push(
-                "下落を伴う出来高増加"
-            );
-        }
-    }
-
-    score =
-        technicalClamp(
-            Math.round(score),
-            0,
-            100
-        );
-
-    let judgment =
-        "中立";
-
-    if (score >= 75) {
-        judgment =
-            "買い寄り";
-    } else if (score >= 60) {
-        judgment =
-            "やや買い寄り";
-    } else if (score <= 25) {
-        judgment =
-            "売り寄り";
-    } else if (score <= 40) {
-        judgment =
-            "やや売り寄り";
-    }
-
-    return {
-        score,
-        judgment,
-        reasons,
-        warnings
-    };
+    score=technicalClamp(Math.round(score),0,100);
+    let judgment="中立";
+    if(score>=80) judgment="強い買い寄り"; else if(score>=65) judgment="買い寄り"; else if(score>=55) judgment="やや買い寄り";
+    else if(score<=20) judgment="強い売り寄り"; else if(score<=35) judgment="売り寄り"; else if(score<=45) judgment="やや売り寄り";
+    return {score,judgment,reasons:reasons.slice(0,6),warnings:warnings.slice(0,6)};
 }
 
 // =====================================
@@ -789,13 +738,13 @@ async function analyzeTechnicalAsset(
             )
     };
 
-    return {
-        ...analysis,
+    analysis.bollinger = calculateBollingerBands(closes);
+    analysis.atr = technicalRound(calculateATR(candles), 2);
+    analysis.levels = calculateSupportResistance(candles, currentPrice);
+    analysis.week52 = calculate52WeekRange(candles, currentPrice);
+    analysis.tradeLevels = calculateTradeLevels(currentPrice, analysis.atr, analysis.levels);
 
-        ...calculateTechnicalScore(
-            analysis
-        )
-    };
+    return { ...analysis, ...calculateTechnicalScore(analysis) };
 }
 
 // =====================================
@@ -937,6 +886,26 @@ function renderTechnicalResult(
                     ${result.volume.ratio}倍
                 </strong>
             </div>
+
+            <div class="technical-section-title">📉 ボリンジャーバンド（20日・2σ）</div>
+            <div class="asset-row"><span>上限 / 中央 / 下限</span><strong>${result.bollinger.upper} / ${result.bollinger.middle} / ${result.bollinger.lower}</strong></div>
+            <div class="asset-row"><span>バンド内位置</span><strong>${result.bollinger.position}%</strong></div>
+
+            <div class="technical-section-title">🧱 サポート・レジスタンス</div>
+            <div class="asset-row"><span>サポート候補</span><strong>${result.levels.support}</strong></div>
+            <div class="asset-row"><span>レジスタンス候補</span><strong>${result.levels.resistance}</strong></div>
+
+            <div class="technical-section-title">📅 52週高値・安値</div>
+            <div class="asset-row"><span>52週高値</span><strong>${result.week52.high}（高値比 ${result.week52.fromHigh}%）</strong></div>
+            <div class="asset-row"><span>52週安値</span><strong>${result.week52.low}（安値比 +${result.week52.fromLow}%）</strong></div>
+            <div class="asset-row"><span>52週レンジ位置</span><strong>${result.week52.position}%</strong></div>
+
+            <div class="technical-section-title">🎯 利確・損切り候補</div>
+            <div class="asset-row"><span>利確候補①</span><strong class="profit-positive">${result.tradeLevels.takeProfit1}</strong></div>
+            <div class="asset-row"><span>利確候補②</span><strong class="profit-positive">${result.tradeLevels.takeProfit2}</strong></div>
+            <div class="asset-row"><span>損切り候補</span><strong class="profit-negative">${result.tradeLevels.stopLoss}</strong></div>
+            <div class="asset-row"><span>リスクリワード</span><strong>${result.tradeLevels.riskReward}倍</strong></div>
+            <p class="technical-disclaimer">※ ATRと直近サポレジから算出した参考値です。投資判断を保証するものではありません。</p>
 
             <div class="technical-reasons">
                 <strong>判定理由</strong>

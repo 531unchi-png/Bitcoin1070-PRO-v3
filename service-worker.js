@@ -1,9 +1,9 @@
 // =====================================
-// Bitcoin1070 PRO Service Worker v1.0
+// Bitcoin1070 PRO Service Worker v4.0
 // =====================================
 
 const CACHE_NAME =
-    "bitcoin1070-pro-v1";
+    "bitcoin1070-pro-v4";
 
 const APP_FILES = [
     "./",
@@ -18,8 +18,8 @@ const APP_FILES = [
     "./technical.js",
     "./script.js",
     "./manifest.json",
-    "./icons/icon-192.png",
-    "./icons/icon-512.PNG"
+    "./icon-192.png",
+    "./icon-512.PNG"
 ];
 
 // アプリファイルを保存
