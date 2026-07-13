@@ -490,66 +490,221 @@ if ("serviceWorker" in navigator) {
         }
     );
 }
-const tutorialTexts = [
+// =====================================
+// 初回チュートリアル v2.0
+// =====================================
 
-"👋 Bitcoin1070 PROへようこそ！",
+const TUTORIAL_STORAGE_KEY =
+    "bitcoin1070_tutorial_completed";
 
-"💰 まずは保有資産を入力しましょう",
+const tutorialSteps = [
+    {
+        icon: "👋",
+        title:
+            "Bitcoin1070 PROへようこそ！",
+        text:
+            "資産管理とテクニカル分析を、ひとつのアプリで確認できます。",
+        showHomeGuide: false
+    },
 
-"📱 ホーム画面へ追加するとアプリのように使えます",
+    {
+        icon: "💰",
+        title:
+            "まずは資産を登録",
+        text:
+            "画面下の編集エリアから、仮想通貨・日本株・米国株を追加してください。",
+        showHomeGuide: false
+    },
 
-"🤖 AI分析で売買タイミングをチェックできます",
+    {
+        icon: "📱",
+        title:
+            "ホーム画面へ追加",
+        text:
+            "ホーム画面へ追加すると、Safariのアドレスバーが消えてアプリのように使えます。",
+        showHomeGuide: true
+    },
 
-"🚀 準備完了！"
-
+    {
+        icon: "🤖",
+        title:
+            "テクニカル分析を活用",
+        text:
+            "MACD・RSI・移動平均線・出来高を使った参考分析を確認できます。",
+        showHomeGuide: false
+    }
 ];
 
 let tutorialStep = 0;
 
-function startTutorial(){
+function showTutorialStep() {
+    const step =
+        tutorialSteps[tutorialStep];
 
-if(localStorage.getItem("tutorialDone")) return;
+    const icon =
+        document.getElementById(
+            "tutorialIcon"
+        );
 
-document
-.getElementById("tutorial")
-.classList.remove("hidden");
+    const title =
+        document.getElementById(
+            "tutorialTitle"
+        );
 
-showTutorial();
+    const text =
+        document.getElementById(
+            "tutorialText"
+        );
 
+    const homeGuide =
+        document.getElementById(
+            "tutorialHomeGuide"
+        );
+
+    const nextButton =
+        document.getElementById(
+            "tutorialNext"
+        );
+
+    const dots =
+        document.querySelectorAll(
+            ".tutorial-dot"
+        );
+
+    if (
+        !step ||
+        !icon ||
+        !title ||
+        !text
+    ) {
+        return;
+    }
+
+    icon.textContent =
+        step.icon;
+
+    title.textContent =
+        step.title;
+
+    text.textContent =
+        step.text;
+
+    if (homeGuide) {
+        homeGuide.classList.toggle(
+            "hidden",
+            !step.showHomeGuide
+        );
+    }
+
+    dots.forEach(
+        (dot, index) => {
+            dot.classList.toggle(
+                "active",
+                index === tutorialStep
+            );
+        }
+    );
+
+    if (nextButton) {
+        nextButton.textContent =
+            tutorialStep ===
+            tutorialSteps.length - 1
+                ? "Bitcoin1070 PROを始める 🚀"
+                : "次へ →";
+    }
 }
 
-function showTutorial(){
+function openTutorial() {
+    const completed =
+        localStorage.getItem(
+            TUTORIAL_STORAGE_KEY
+        );
 
-document.getElementById("tutorialText").textContent=
+    if (completed === "yes") {
+        return;
+    }
 
-tutorialTexts[tutorialStep];
+    const tutorial =
+        document.getElementById(
+            "tutorial"
+        );
 
+    if (!tutorial) {
+        return;
+    }
+
+    tutorialStep = 0;
+
+    tutorial.classList.remove(
+        "hidden"
+    );
+
+    showTutorialStep();
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
+function closeTutorial(
+    markCompleted = true
+) {
+    const tutorial =
+        document.getElementById(
+            "tutorial"
+        );
 
-startTutorial();
+    if (markCompleted) {
+        localStorage.setItem(
+            TUTORIAL_STORAGE_KEY,
+            "yes"
+        );
+    }
 
-document
-.getElementById("tutorialNext")
-.addEventListener("click",()=>{
-
-tutorialStep++;
-
-if(tutorialStep>=tutorialTexts.length){
-
-localStorage.setItem("tutorialDone","yes");
-
-document
-.getElementById("tutorial")
-.classList.add("hidden");
-
-return;
-
+    if (tutorial) {
+        tutorial.classList.add(
+            "hidden"
+        );
+    }
 }
 
-showTutorial();
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        const nextButton =
+            document.getElementById(
+                "tutorialNext"
+            );
 
-});
+        const closeButton =
+            document.getElementById(
+                "tutorialClose"
+            );
 
-});
+        if (nextButton) {
+            nextButton.addEventListener(
+                "click",
+                () => {
+                    tutorialStep++;
+
+                    if (
+                        tutorialStep >=
+                        tutorialSteps.length
+                    ) {
+                        closeTutorial(true);
+                        return;
+                    }
+
+                    showTutorialStep();
+                }
+            );
+        }
+
+        if (closeButton) {
+            closeButton.addEventListener(
+                "click",
+                () => {
+                    closeTutorial(true);
+                }
+            );
+        }
+
+        openTutorial();
+    }
+);
