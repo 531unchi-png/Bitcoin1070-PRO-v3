@@ -24,18 +24,31 @@ let assets = loadAssetsFromStorage(DEFAULT_ASSETS);
 let transactionHistory = loadHistoryFromStorage();
 
 const CRYPTO_API_URL = "https://bitcoin1070-api.531unchi.workers.dev";
+// v8.2の保存データを引き継ぐためキー名は維持
 const CRYPTO_CACHE_KEY = "bitcoin1070_crypto_prices_v8_2";
 const CRYPTO_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-let latestCryptoPrices = loadCachedCryptoPrices();
+// キャッシュ読込関数から参照されるため、必ず先に宣言する
 let latestCryptoPricesUpdatedAt = null;
+let latestCryptoPrices = loadCachedCryptoPrices();
 
 function loadCachedCryptoPrices() {
     try {
         const saved = JSON.parse(localStorage.getItem(CRYPTO_CACHE_KEY) || "null");
-        if (!saved || typeof saved.prices !== "object") return {};
+        if (!saved || !saved.prices || typeof saved.prices !== "object") return {};
+
+        const normalized = {};
+        Object.entries(saved.prices).forEach(([key, value]) => {
+            const price = Number(value);
+            if (Number.isFinite(price) && price > 0) {
+                normalized[String(key).trim().toUpperCase()] = price;
+            }
+        });
+
+        if (Object.keys(normalized).length === 0) return {};
         latestCryptoPricesUpdatedAt = saved.fetchedAt || null;
-        return saved.prices;
-    } catch {
+        return normalized;
+    } catch (error) {
+        console.warn("仮想通貨価格キャッシュ読込エラー:", error);
         return {};
     }
 }
@@ -192,7 +205,10 @@ async function fetchCryptoPrices() {
         const id = String(asset.coinGeckoId).trim().toLowerCase();
         const value = Number(data?.prices?.[id]?.jpy ?? data?.[id]?.jpy);
         if (Number.isFinite(value) && value > 0) {
-            nextPrices[String(asset.symbol || "").toUpperCase()] = value;
+            const symbolKey = String(asset.symbol || "").trim().toUpperCase();
+            const idKey = String(asset.coinGeckoId || "").trim().toUpperCase();
+            if (symbolKey) nextPrices[symbolKey] = value;
+            if (idKey) nextPrices[idKey] = value;
         }
     });
 
@@ -218,8 +234,12 @@ function evaluateAssets() {
         let acquisitionValueJpy = 0;
 
         if (asset.type === "crypto") {
-            currentPrice =
-                Number(latestCryptoPrices[String(asset.symbol || "").toUpperCase()]) || 0;
+            const symbolKey = String(asset.symbol || "").trim().toUpperCase();
+            const idKey = String(asset.coinGeckoId || "").trim().toUpperCase();
+            currentPrice = Number(
+                latestCryptoPrices[symbolKey] ??
+                latestCryptoPrices[idKey]
+            ) || 0;
 
             currentPriceJpy = currentPrice;
             acquisitionValueJpy = amount * cost;
@@ -836,6 +856,11 @@ function setupSaveButton() {
 async function loadMarketData() {
     const comment =
         document.getElementById("assetComment");
+
+    // ページ移動直後は保存済みの正常価格を先に描画し、0円表示を防ぐ
+    if (Object.keys(latestCryptoPrices).length > 0) {
+        refreshPortfolio();
+    }
 
     try {
         if (comment) {
