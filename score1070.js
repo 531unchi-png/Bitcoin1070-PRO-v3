@@ -31,14 +31,15 @@
     return {support,resistance,supportDistance:(current-support)/current*100,resistanceDistance:(resistance-current)/current*100};
   }
   function theory(){
-    const start=new Date('2022-11-21T00:00:00+09:00'),days=Math.floor((Date.now()-start.getTime())/86400000),progress=days/1070*100;
-    let points=0,note='';
-    if(progress<45){points=18;note='1070日サイクル前半';}
-    else if(progress<70){points=27;note='1070日サイクル成長局面';}
-    else if(progress<88){points=24;note='1070日サイクル後半';}
-    else if(progress<100){points=14;note='1070日サイクル終盤';}
-    else {points=6;note='1070日基準通過後';}
-    return {days,progress,points,note};
+    const c=window.Bitcoin1070Cycle?.snapshot?.();
+    if(!c)return {days:0,progress:0,points:10,note:'サイクル未判定',stage:'未判定'};
+    let points=10;
+    if(c.stage==='下落・底探し') points=10;
+    else if(c.stage==='底候補ゾーン') points=18;
+    else if(c.stage==='次サイクル上昇期') points=c.progress<70?27:22;
+    else if(c.stage==='次回ピーク候補') points=8;
+    else points=12;
+    return {days:c.declineElapsed,progress:c.progress,points,note:c.stage,stage:c.stage};
   }
   async function fetchJson(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();}
   function scoreFear(v){if(v<=20)return 17;if(v<=35)return 19;if(v<=55)return 16;if(v<=70)return 12;if(v<=80)return 7;return 3;}
@@ -74,7 +75,7 @@
       const prices=(market.prices||[]).map(x=>Number(x[1])).filter(Number.isFinite); if(prices.length<35)throw new Error('価格履歴不足');
       const fearValue=Number(fng?.data?.[0]?.value); const rsiValue=rsi(prices),m=macd(prices),b=bollinger(prices),l=levels(prices),t=theory();
       const items=[
-        {name:'1070日理論',points:t.points,max:30,note:`${Math.round(t.progress)}%・${t.note}`},
+        {name:'1070日理論',points:t.points,max:30,note:`${t.note}・進行 ${Math.round(t.progress)}%`},
         {name:'Fear & Greed',points:scoreFear(fearValue),max:20,note:`${fearValue}`},
         {name:'RSI（14日）',points:scoreRsi(rsiValue),max:15,note:`${round(rsiValue)}`},
         {name:'MACD',points:scoreMacd(m),max:15,note:m.hist>=0?'上向き':'下向き'},
@@ -86,7 +87,7 @@
       if(rsiValue>=45&&rsiValue<=65)positives.push(`RSI ${round(rsiValue)}で健全`);if(rsiValue>=70)risks.push(`RSI ${round(rsiValue)}で過熱`);if(rsiValue<=30)positives.push('RSIが売られすぎ圏');
       if(fearValue<=35)positives.push('市場心理は恐怖寄り');if(fearValue>=75)risks.push('市場心理は極度の強欲');
       if(l.supportDistance<=4)positives.push('主要サポートが近い');if(l.resistanceDistance<=2)risks.push('直上にレジスタンス');
-      if(t.progress>=88)risks.push('1070日サイクル終盤');else positives.push('1070日基準まで余地あり');
+      if(t.stage==='下落・底探し')risks.push('高値後の底探し局面');else if(t.stage==='底候補ゾーン')positives.push('底候補ゾーンを監視中');else if(t.stage==='次回ピーク候補')risks.push('1070日前後のピーク候補');else positives.push('次サイクルの時間的余地あり');
       const data={total,items,positives,risks,rsiValue,fearValue,updatedAt:Date.now()}; localStorage.setItem(CACHE_KEY,JSON.stringify(data));render(data);
     }catch(e){console.error('Bitcoin1070指数取得失敗',e);const cached=localStorage.getItem(CACHE_KEY);if(cached){render(JSON.parse(cached));document.getElementById('scoreUpdatedAt').textContent+='（保存データ）';}else{document.getElementById('scoreValue').textContent='--';document.getElementById('scoreLabel').textContent='取得失敗';document.getElementById('scoreMessage').textContent='通信を確認して、更新ボタンを押してください。';}}
     finally{if(btn){btn.disabled=false;btn.textContent='↻ 更新';}}
