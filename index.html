@@ -2,8 +2,22 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ホーム | Bitcoin1070 PRO v7.0</title><link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://s3.tradingview.com/tv.js"></script></head><body><header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v7.0</span></div><h1>🏠 ホーム</h1><p>総資産と1070日サイクルをひと目で確認</p></header><main class="container app-page">
+<title>ホーム | Bitcoin1070 PRO v8.0</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://s3.tradingview.com/tv.js"></script></head><body><header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v8.0</span></div><h1>🏠 ホーム</h1><p>総資産と1070日サイクルをひと目で確認</p></header><main class="container app-page">
+
+<section class="card score-card" id="bitcoin1070ScoreCard">
+  <div class="score-card-head"><div><span class="eyebrow">BITCOIN1070 INDEX</span><h2>🧠 Bitcoin1070指数</h2></div><button type="button" id="refreshScoreButton" class="score-refresh">↻ 更新</button></div>
+  <div class="score-main">
+    <div class="score-gauge" id="scoreGauge" style="--score:0"><div><strong id="scoreValue">--</strong><span>/ 100</span></div></div>
+    <div class="score-summary"><span id="scoreStars">☆☆☆☆☆</span><strong id="scoreLabel">計算中...</strong><p id="scoreMessage">市場データを取得して指数を計算しています。</p><small id="scoreUpdatedAt">未更新</small></div>
+  </div>
+  <details class="score-details"><summary>指数の内訳を見る</summary><div id="scoreBreakdown" class="score-breakdown"><div class="loading-state">計算中...</div></div></details>
+</section>
+<section class="grid score-signal-grid">
+  <div class="card"><div class="title">✅ 良いサイン</div><div id="positiveSignals" class="signal-list"><p class="small">分析中...</p></div></div>
+  <div class="card"><div class="title">⚠️ 危険サイン</div><div id="riskSignals" class="signal-list"><p class="small">分析中...</p></div></div>
+</section>
+<section class="card"><div class="title">🎯 今日の戦略</div><div id="todayStrategy" class="strategy-box">指数を計算中...</div><p class="technical-disclaimer">本指数は1070日理論と公開市場データを使った参考指標です。売買を推奨するものではありません。</p></section>
 <section class="card hero-asset"><span class="eyebrow">TOTAL ASSETS</span><h2 id="totalAsset">¥0</h2><p id="assetComment">最新価格を取得中...</p></section>
 <section class="quick-grid">
 <a class="quick-card" href="portfolio.html"><span>💼</span><strong>保有資産</strong><small>一覧・推移・構成</small></a>
@@ -15,4 +29,4 @@
 <section class="card"><div class="title">🤖 AIマーケット分析</div><div class="ai" id="aiComment">分析中...</div></section>
 <section class="card theory-home"><div class="title">⏳ 1070日理論</div><div class="theory-number"><strong id="days">--</strong><span>日経過</span></div><div class="theory-details"><span id="theoryPhase">局面を判定中...</span><span id="theoryTarget">1070日到達日を計算中...</span></div><div class="progress"><div class="progress-bar" id="progressBar"></div></div><div class="mini-stat"><span>次回半減期まで</span><strong id="halving">--</strong></div></section>
 <section class="card"><h2>📊 ジャンル別資産</h2><div class="category-summary"><div class="category-box"><span>🪙 仮想通貨</span><strong id="cryptoTotal">¥0</strong></div><div class="category-box"><span>🇯🇵 日本株</span><strong id="jpStockTotal">¥0</strong></div><div class="category-box"><span>🇺🇸 米国株</span><strong id="usStockTotal">¥0</strong></div></div></section>
-</main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html" class="active"><span>⌂</span><small>ホーム</small></a><a href="market.html" class=""><span>📈</span><small>相場</small></a><a href="portfolio.html" class=""><span>💼</span><small>資産</small></a><a href="news.html" class=""><span>📰</span><small>情報</small></a><a href="settings.html" class=""><span>⚙️</span><small>設定</small></a></nav><script src="stocks.js"></script><script src="storage.js"></script><script src="chart.js"></script><script src="portfolio.js"></script><script src="analytics.js"></script><script src="script.js"></script><script src="app-shell.js"></script></body></html>
+</main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html" class="active"><span>⌂</span><small>ホーム</small></a><a href="market.html" class=""><span>📈</span><small>相場</small></a><a href="portfolio.html" class=""><span>💼</span><small>資産</small></a><a href="news.html" class=""><span>📰</span><small>情報</small></a><a href="settings.html" class=""><span>⚙️</span><small>設定</small></a></nav><script src="stocks.js"></script><script src="storage.js"></script><script src="chart.js"></script><script src="portfolio.js"></script><script src="analytics.js"></script><script src="script.js"></script><script src="app-shell.js"></script><script src="score1070.js"></script></body></html>
