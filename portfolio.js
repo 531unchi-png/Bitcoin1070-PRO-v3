@@ -23,7 +23,28 @@ const DEFAULT_ASSETS = [];
 let assets = loadAssetsFromStorage(DEFAULT_ASSETS);
 let transactionHistory = loadHistoryFromStorage();
 
-let latestCryptoPrices = {};
+const CRYPTO_API_URL = "https://bitcoin1070-api.531unchi.workers.dev";
+const CRYPTO_CACHE_KEY = "bitcoin1070_crypto_prices_v8_2";
+const CRYPTO_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+let latestCryptoPrices = loadCachedCryptoPrices();
+let latestCryptoPricesUpdatedAt = null;
+
+function loadCachedCryptoPrices() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(CRYPTO_CACHE_KEY) || "null");
+        if (!saved || typeof saved.prices !== "object") return {};
+        latestCryptoPricesUpdatedAt = saved.fetchedAt || null;
+        return saved.prices;
+    } catch {
+        return {};
+    }
+}
+
+function saveCryptoPrices(prices, fetchedAt) {
+    if (!prices || Object.keys(prices).length === 0) return;
+    latestCryptoPricesUpdatedAt = fetchedAt || new Date().toISOString();
+    localStorage.setItem(CRYPTO_CACHE_KEY, JSON.stringify({ prices, fetchedAt: latestCryptoPricesUpdatedAt }));
+}
 let latestEvaluations = [];
 
 const FALLBACK_STOCK_PRICES = {
@@ -146,44 +167,38 @@ function getStockPriceData() {
 // =====================================
 
 async function fetchCryptoPrices() {
-    const cryptoAssets = assets.filter(
-        asset =>
-            asset.type === "crypto" &&
-            asset.coinGeckoId
-    );
+    const cryptoAssets = assets.filter(asset => asset.type === "crypto" && asset.coinGeckoId);
+    const ids = [...new Set(cryptoAssets.map(asset => String(asset.coinGeckoId).trim().toLowerCase()).filter(Boolean))];
+    if (ids.length === 0) return latestCryptoPrices;
 
-    const ids = [
-        ...new Set(
-            cryptoAssets.map(asset => asset.coinGeckoId)
-        )
-    ];
-
-    if (ids.length === 0) {
-        return {};
+    const endpoint = `${CRYPTO_API_URL}?mode=crypto&ids=${encodeURIComponent(ids.join(","))}`;
+    let data;
+    try {
+        const response = await fetch(endpoint, { cache: "no-store" });
+        if (!response.ok) throw new Error(`仮想通貨API取得失敗: ${response.status}`);
+        data = await response.json();
+    } catch (apiError) {
+        // API障害時のみCoinGeckoへ直接フォールバック
+        const direct = "https://api.coingecko.com/api/v3/simple/price" +
+            `?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=jpy&include_24hr_change=true`;
+        const response = await fetch(direct, { cache: "no-store" });
+        if (!response.ok) throw apiError;
+        const directData = await response.json();
+        data = { prices: directData, fetchedAt: new Date().toISOString() };
     }
 
-    const endpoint =
-        "https://api.coingecko.com/api/v3/simple/price" +
-        `?ids=${encodeURIComponent(ids.join(","))}` +
-        "&vs_currencies=jpy";
-
-    const response = await fetch(endpoint);
-
-    if (!response.ok) {
-        throw new Error(
-            `CoinGecko取得失敗: ${response.status}`
-        );
-    }
-
-    const data = await response.json();
-    const prices = {};
-
+    const nextPrices = { ...latestCryptoPrices };
     cryptoAssets.forEach(asset => {
-        prices[asset.symbol] =
-            Number(data?.[asset.coinGeckoId]?.jpy) || 0;
+        const id = String(asset.coinGeckoId).trim().toLowerCase();
+        const value = Number(data?.prices?.[id]?.jpy ?? data?.[id]?.jpy);
+        if (Number.isFinite(value) && value > 0) {
+            nextPrices[String(asset.symbol || "").toUpperCase()] = value;
+        }
     });
 
-    return prices;
+    if (Object.keys(nextPrices).length === 0) throw new Error("有効な仮想通貨価格がありません");
+    saveCryptoPrices(nextPrices, data?.fetchedAt);
+    return nextPrices;
 }
 
 // =====================================
@@ -204,7 +219,7 @@ function evaluateAssets() {
 
         if (asset.type === "crypto") {
             currentPrice =
-                Number(latestCryptoPrices[asset.symbol]) || 0;
+                Number(latestCryptoPrices[String(asset.symbol || "").toUpperCase()]) || 0;
 
             currentPriceJpy = currentPrice;
             acquisitionValueJpy = amount * cost;
@@ -828,9 +843,17 @@ async function loadMarketData() {
                 "最新価格を取得中...";
         }
 
-        latestCryptoPrices =
-            await fetchCryptoPrices();
+        const fetchedPrices = await fetchCryptoPrices();
+        if (fetchedPrices && Object.keys(fetchedPrices).length > 0) {
+            latestCryptoPrices = fetchedPrices;
+        }
 
+        if (comment) {
+            const stamp = latestCryptoPricesUpdatedAt
+                ? new Date(latestCryptoPricesUpdatedAt).toLocaleString("ja-JP")
+                : "現在";
+            comment.textContent = `価格更新: ${stamp}`;
+        }
         refreshPortfolio();
     } catch (error) {
         console.error(
@@ -839,8 +862,10 @@ async function loadMarketData() {
         );
 
         if (comment) {
-            comment.textContent =
-                "価格取得に失敗しました。再読み込みしてください。";
+            const hasCache = Object.keys(latestCryptoPrices).length > 0;
+            comment.textContent = hasCache
+                ? "通信不安定のため前回取得価格を表示中"
+                : "仮想通貨価格を取得できません。通信を確認してください。";
         }
 
         refreshPortfolio();

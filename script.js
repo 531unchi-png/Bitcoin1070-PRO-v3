@@ -57,92 +57,42 @@ function getDaysBetween(startDate, endDate) {
 // =====================================
 
 async function loadBitcoinMarket() {
-    const btcPriceElement =
-        document.getElementById("btcPrice");
+    const btcPriceElement = document.getElementById("btcPrice");
+    const btcChangeElement = document.getElementById("btcChange");
+    const cacheKey = "bitcoin1070_btc_market_v8_2";
 
-    const btcChangeElement =
-        document.getElementById("btcChange");
+    const render = (price, change, cached = false) => {
+        if (btcPriceElement) btcPriceElement.textContent = marketFormatYen(price) + (cached ? "*" : "");
+        if (btcChangeElement) {
+            btcChangeElement.textContent = marketFormatPercent(change);
+            btcChangeElement.classList.remove("profit-positive", "profit-negative", "profit-neutral");
+            btcChangeElement.classList.add(change > 0 ? "profit-positive" : change < 0 ? "profit-negative" : "profit-neutral");
+        }
+    };
 
     try {
-        const endpoint =
-            "https://api.coingecko.com/api/v3/simple/price" +
-            "?ids=bitcoin" +
-            "&vs_currencies=jpy" +
-            "&include_24hr_change=true";
-
-        const response = await fetch(endpoint, {
-            cache: "no-store"
-        });
-
-        if (!response.ok) {
-            throw new Error(
-                `BTC価格取得エラー: ${response.status}`
-            );
-        }
-
+        const endpoint = "https://bitcoin1070-api.531unchi.workers.dev?mode=crypto&ids=bitcoin";
+        const response = await fetch(endpoint, { cache: "no-store" });
+        if (!response.ok) throw new Error(`BTC価格取得エラー: ${response.status}`);
         const data = await response.json();
-
-        const price =
-            Number(data?.bitcoin?.jpy);
-
-        const change =
-            Number(data?.bitcoin?.jpy_24h_change);
-
-        if (btcPriceElement) {
-            btcPriceElement.textContent =
-                marketFormatYen(price);
-        }
-
-        if (btcChangeElement) {
-            btcChangeElement.textContent =
-                marketFormatPercent(change);
-
-            btcChangeElement.classList.remove(
-                "profit-positive",
-                "profit-negative",
-                "profit-neutral"
-            );
-
-            if (change > 0) {
-                btcChangeElement.classList.add(
-                    "profit-positive"
-                );
-            } else if (change < 0) {
-                btcChangeElement.classList.add(
-                    "profit-negative"
-                );
-            } else {
-                btcChangeElement.classList.add(
-                    "profit-neutral"
-                );
-            }
-        }
-
-        return {
-            price,
-            change
-        };
-
+        const price = Number(data?.prices?.bitcoin?.jpy);
+        const change = Number(data?.prices?.bitcoin?.jpy_24h_change) || 0;
+        if (!Number.isFinite(price) || price <= 0) throw new Error("BTC価格データ不正");
+        localStorage.setItem(cacheKey, JSON.stringify({ price, change, fetchedAt: data?.fetchedAt || new Date().toISOString() }));
+        render(price, change, false);
+        return { price, change };
     } catch (error) {
-        console.error(
-            "BTC市場データ取得失敗:",
-            error
-        );
-
-        if (btcPriceElement) {
-            btcPriceElement.textContent =
-                "取得失敗";
-        }
-
-        if (btcChangeElement) {
-            btcChangeElement.textContent =
-                "--";
-        }
-
-        return {
-            price: 0,
-            change: 0
-        };
+        console.error("BTC市場データ取得失敗:", error);
+        try {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+            if (Number(cached?.price) > 0) {
+                render(Number(cached.price), Number(cached.change) || 0, true);
+                return { price: Number(cached.price), change: Number(cached.change) || 0 };
+            }
+        } catch {}
+        if (btcPriceElement) btcPriceElement.textContent = "取得失敗";
+        if (btcChangeElement) btcChangeElement.textContent = "--";
+        return { price: 0, change: 0 };
     }
 }
 

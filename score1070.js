@@ -1,7 +1,7 @@
 // Bitcoin1070 PRO v8.0 - Bitcoin1070 Index
 (() => {
   'use strict';
-  const HISTORY_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=jpy&days=120&interval=daily';
+  const HISTORY_URL = 'https://bitcoin1070-api.531unchi.workers.dev?mode=crypto-history&id=bitcoin&days=120';
   const FNG_URL = 'https://api.alternative.me/fng/?limit=1';
   const CACHE_KEY = 'bitcoin1070_v8_score_cache';
 
