@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v9.2 - シンボル／銘柄名 横断検索マスタ
+// Bitcoin1070 PRO v10.0 - シンボル／銘柄名 横断検索マスタ
 window.B1070_ASSET_MASTER = [
   {type:'crypto',symbol:'BTC',name:'Bitcoin',coinGeckoId:'bitcoin',keywords:['ビットコイン']},
   {type:'crypto',symbol:'ETH',name:'Ethereum',coinGeckoId:'ethereum',keywords:['イーサリアム']},
