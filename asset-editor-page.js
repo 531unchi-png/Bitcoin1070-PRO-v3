@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v10.0 - 動的シンボル／銘柄名検索
+// Bitcoin1070 PRO v10.1 - かな前方一致／銘柄名／シンボル検索
 const DEFAULT_ASSETS = [];
 const SEARCH_API_URL = 'https://bitcoin1070-api.531unchi.workers.dev';
 let assets = loadAssetsFromStorage(DEFAULT_ASSETS);
@@ -17,11 +17,26 @@ function normalizeSymbol(value,type){
     if(type==='jp') symbol=symbol.replace(/\.T$/i,'');
     return symbol;
 }
+function kataToHira(value){
+  return String(value||'').replace(/[ァ-ヶ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
+}
+function normalizeSearchText(value){
+  return kataToHira(String(value||'').normalize('NFKC').toLowerCase())
+    .replace(/[\s・･,.，。()（）\-ー]/g,'');
+}
 function searchableValues(item){
-  return [item.symbol,item.name,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])].map(v=>String(v||'').toLowerCase());
+  return [item.symbol,item.name,item.reading,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])]
+    .map(v=>normalizeSearchText(v)).filter(Boolean);
+}
+function matchRank(item,q){
+  const vals=searchableValues(item);
+  if(vals.some(v=>v===q)) return 0;
+  if(vals.some(v=>v.startsWith(q))) return 1;
+  if(vals.some(v=>v.includes(q))) return 2;
+  return 9;
 }
 function findMaster(query,type){
-    const q=String(query||'').trim().toLowerCase();
+    const q=normalizeSearchText(query);
     if(!q) return null;
     const source=[...ASSET_MASTER,...remoteSuggestions];
     const exact = source.find(item => searchableValues(item).some(v=>v===q));
@@ -37,16 +52,18 @@ function uniqueItems(items){
   });
 }
 function getLocalSuggestions(query,type){
-    const q=String(query||'').trim().toLowerCase();
+    const q=normalizeSearchText(query);
     const source = q
-      ? ASSET_MASTER.filter(item=>searchableValues(item).some(v=>v.includes(q)))
+      ? ASSET_MASTER.filter(item=>matchRank(item,q)<9)
       : ASSET_MASTER.filter(item=>item.type===type);
     return source.sort((a,b)=>{
       const ae=a.type===type?0:1, be=b.type===type?0:1;
       if(ae!==be) return ae-be;
-      const ax=searchableValues(a).some(v=>v===q)?0:1, bx=searchableValues(b).some(v=>v===q)?0:1;
-      return ax-bx || a.symbol.localeCompare(b.symbol,'ja');
-    }).slice(0,10);
+      const rankDiff=matchRank(a,q)-matchRank(b,q);
+      if(rankDiff!==0) return rankDiff;
+      const ar=normalizeSearchText(a.reading||a.name), br=normalizeSearchText(b.reading||b.name);
+      return ar.localeCompare(br,'ja') || a.symbol.localeCompare(b.symbol,'ja');
+    }).slice(0,50);
 }
 function setAssetType(nextType){
   const select=document.getElementById('newAssetType');
@@ -61,7 +78,7 @@ function renderAssetEditor() {
         : `<label>Yahoo Financeコード<input type="text" data-index="${index}" data-field="yahooSymbol" value="${escapeHtml(asset.yahooSymbol||'')}" placeholder="例：285A.T / NVDA"></label>`;
       return `<section class="card editor-page-item"><div class="editor-page-title"><div><strong>${escapeHtml(asset.name)}</strong><span>${escapeHtml(asset.symbol)} ・ ${typeLabel(asset.type)}</span></div><button type="button" class="delete-button" data-delete-index="${index}">🗑 削除</button></div><div class="editor-page-grid"><label>銘柄名<input type="text" data-index="${index}" data-field="name" value="${escapeHtml(asset.name)}"></label><label>数量・株数<input type="number" inputmode="decimal" step="any" min="0" data-index="${index}" data-field="amount" value="${asset.amount}"></label><label>平均取得単価（${costUnit}）<input type="number" inputmode="decimal" step="any" min="0" data-index="${index}" data-field="cost" value="${asset.cost}"></label>${marketCode}</div></section>`;
     }).join('');
-    editor.innerHTML=`${items||'<div class="card"><p>保有資産がまだありません。</p></div>'}<section class="card add-asset-card"><h2>➕ 新しい銘柄を追加</h2><p class="small">シンボルでも銘柄名でも検索できます。日本株・米国株・仮想通貨をオンライン検索し、候補選択でコードを自動入力します。</p><div class="editor-page-grid"><label>種類<select id="newAssetType"><option value="crypto">仮想通貨</option><option value="jp">日本株</option><option value="us">米国株</option></select></label><label class="asset-search-label">シンボル・銘柄検索<input id="newAssetSymbol" type="text" autocomplete="off" placeholder="9984 / ソフトバンク / BTC / NVIDIA"><div id="assetSuggestions" class="asset-suggestions hidden"></div></label><label>銘柄名<input id="newAssetName" type="text" placeholder="候補選択で自動入力"></label><label>数量・株数<input id="newAssetAmount" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label>平均取得単価 <span id="costUnitHint" class="field-hint">円</span><input id="newAssetCost" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label id="coinGeckoField">CoinGecko ID<input id="newCoinGeckoId" type="text" placeholder="候補選択で自動入力"></label><label id="yahooField" class="hidden">Yahoo Financeコード<input id="newYahooSymbol" type="text" placeholder="候補選択で自動入力"></label></div><div id="autoFillStatus" class="auto-fill-status">🔍 シンボルまたは銘柄名を入力してください</div><button id="addAssetButton" type="button" class="full-width-button">➕ 銘柄を追加</button></section>`;
+    editor.innerHTML=`${items||'<div class="card"><p>保有資産がまだありません。</p></div>'}<section class="card add-asset-card"><h2>➕ 新しい銘柄を追加</h2><p class="small">シンボルでも銘柄名でも検索できます。日本株・米国株・仮想通貨をオンライン検索し、ひらがな・カタカナ・漢字・証券コードで検索できます。入力文字で始まる候補を優先表示します。</p><div class="editor-page-grid"><label>種類<select id="newAssetType"><option value="crypto">仮想通貨</option><option value="jp">日本株</option><option value="us">米国株</option></select></label><label class="asset-search-label">シンボル・銘柄検索<input id="newAssetSymbol" type="text" autocomplete="off" placeholder="あ / あい / ソフトバンク / 9984 / BTC"><div id="assetSuggestions" class="asset-suggestions hidden"></div></label><label>銘柄名<input id="newAssetName" type="text" placeholder="候補選択で自動入力"></label><label>数量・株数<input id="newAssetAmount" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label>平均取得単価 <span id="costUnitHint" class="field-hint">円</span><input id="newAssetCost" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label id="coinGeckoField">CoinGecko ID<input id="newCoinGeckoId" type="text" placeholder="候補選択で自動入力"></label><label id="yahooField" class="hidden">Yahoo Financeコード<input id="newYahooSymbol" type="text" placeholder="候補選択で自動入力"></label></div><div id="autoFillStatus" class="auto-fill-status">🔍 シンボルまたは銘柄名を入力してください</div><button id="addAssetButton" type="button" class="full-width-button">➕ 銘柄を追加</button></section>`;
     editor.querySelectorAll('[data-delete-index]').forEach(b=>b.addEventListener('click',()=>deleteAsset(Number(b.dataset.deleteIndex))));
     bindAddForm();
 }
@@ -108,9 +125,10 @@ async function runSearch(){
     const data=await response.json();
     if(currentId!==searchRequestId) return;
     remoteSuggestions=Array.isArray(data.results)?data.results:[];
-    const combined=uniqueItems([...local,...remoteSuggestions]).slice(0,15);
+    const qn=normalizeSearchText(query);
+    const combined=uniqueItems([...local,...remoteSuggestions]).sort((a,b)=>matchRank(a,qn)-matchRank(b,qn)||(normalizeSearchText(a.reading||a.name)).localeCompare(normalizeSearchText(b.reading||b.name),'ja')).slice(0,50);
     renderSuggestions(combined);
-    if(status) status.textContent=combined.length?`✅ ${combined.length}件の候補を表示中`:'⚠️ 候補が見つかりません。';
+    if(status) status.textContent=combined.length?`✅ ${combined.length}件の候補を表示中（前方一致優先）`:'⚠️ 候補が見つかりません。';
   }catch(error){
     if(currentId!==searchRequestId) return;
     // 日本株コードはAPI障害時も登録可能にする
