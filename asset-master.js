@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v9.1 - 銘柄マスタ／自動補完
+// Bitcoin1070 PRO v9.2 - シンボル／銘柄名 横断検索マスタ
 window.B1070_ASSET_MASTER = [
   {type:'crypto',symbol:'BTC',name:'Bitcoin',coinGeckoId:'bitcoin',keywords:['ビットコイン']},
   {type:'crypto',symbol:'ETH',name:'Ethereum',coinGeckoId:'ethereum',keywords:['イーサリアム']},
@@ -8,24 +8,37 @@ window.B1070_ASSET_MASTER = [
   {type:'crypto',symbol:'RENDER',name:'Render',coinGeckoId:'render-token',keywords:['レンダー','RNDR']},
   {type:'crypto',symbol:'TAO',name:'Bittensor',coinGeckoId:'bittensor',keywords:['ビテンソル']},
   {type:'crypto',symbol:'SHIB',name:'Shiba Inu',coinGeckoId:'shiba-inu',keywords:['シバイヌ']},
-  {type:'jp',symbol:'285A',name:'キオクシアホールディングス',yahooSymbol:'285A.T',keywords:['キオクシア','KIOXIA']},
+
+  {type:'jp',symbol:'285A',name:'キオクシアホールディングス',yahooSymbol:'285A.T',keywords:['キオクシア','KIOXIA','キオクシアHD']},
+  {type:'jp',symbol:'3556',name:'リネットジャパングループ',yahooSymbol:'3556.T',keywords:['リネットジャパン','リネット']},
   {type:'jp',symbol:'1605',name:'INPEX',yahooSymbol:'1605.T',keywords:['インペックス']},
   {type:'jp',symbol:'7011',name:'三菱重工業',yahooSymbol:'7011.T',keywords:['三菱重工']},
+  {type:'jp',symbol:'7012',name:'川崎重工業',yahooSymbol:'7012.T',keywords:['川崎重工']},
+  {type:'jp',symbol:'7013',name:'IHI',yahooSymbol:'7013.T',keywords:['アイエイチアイ']},
   {type:'jp',symbol:'5803',name:'フジクラ',yahooSymbol:'5803.T',keywords:[]},
   {type:'jp',symbol:'6857',name:'アドバンテスト',yahooSymbol:'6857.T',keywords:[]},
-  {type:'jp',symbol:'3778',name:'さくらインターネット',yahooSymbol:'3778.T',keywords:[]},
+  {type:'jp',symbol:'3778',name:'さくらインターネット',yahooSymbol:'3778.T',keywords:['さくら']},
   {type:'jp',symbol:'5631',name:'日本製鋼所',yahooSymbol:'5631.T',keywords:[]},
   {type:'jp',symbol:'5401',name:'日本製鉄',yahooSymbol:'5401.T',keywords:[]},
-  {type:'jp',symbol:'6594',name:'ニデック',yahooSymbol:'6594.T',keywords:[]},
-  {type:'jp',symbol:'6981',name:'村田製作所',yahooSymbol:'6981.T',keywords:[]},
+  {type:'jp',symbol:'6594',name:'ニデック',yahooSymbol:'6594.T',keywords:['日本電産']},
+  {type:'jp',symbol:'6981',name:'村田製作所',yahooSymbol:'6981.T',keywords:['村田']},
   {type:'jp',symbol:'8035',name:'東京エレクトロン',yahooSymbol:'8035.T',keywords:['東エレク']},
   {type:'jp',symbol:'135A',name:'VRAIN Solution',yahooSymbol:'135A.T',keywords:['VRAIN','ブレインソリューション']},
   {type:'jp',symbol:'3350',name:'メタプラネット',yahooSymbol:'3350.T',keywords:[]},
+  {type:'jp',symbol:'6501',name:'日立製作所',yahooSymbol:'6501.T',keywords:['日立']},
+  {type:'jp',symbol:'6702',name:'富士通',yahooSymbol:'6702.T',keywords:[]},
+  {type:'jp',symbol:'6758',name:'ソニーグループ',yahooSymbol:'6758.T',keywords:['ソニー']},
+  {type:'jp',symbol:'7203',name:'トヨタ自動車',yahooSymbol:'7203.T',keywords:['トヨタ']},
+  {type:'jp',symbol:'8306',name:'三菱UFJフィナンシャル・グループ',yahooSymbol:'8306.T',keywords:['三菱UFJ','MUFG']},
+  {type:'jp',symbol:'8316',name:'三井住友フィナンシャルグループ',yahooSymbol:'8316.T',keywords:['三井住友','SMFG']},
+
   {type:'us',symbol:'NVDA',name:'NVIDIA',yahooSymbol:'NVDA',keywords:['エヌビディア']},
   {type:'us',symbol:'AAPL',name:'Apple',yahooSymbol:'AAPL',keywords:['アップル']},
   {type:'us',symbol:'MSFT',name:'Microsoft',yahooSymbol:'MSFT',keywords:['マイクロソフト']},
   {type:'us',symbol:'TSLA',name:'Tesla',yahooSymbol:'TSLA',keywords:['テスラ']},
   {type:'us',symbol:'AMZN',name:'Amazon',yahooSymbol:'AMZN',keywords:['アマゾン']},
   {type:'us',symbol:'GOOGL',name:'Alphabet',yahooSymbol:'GOOGL',keywords:['グーグル','Google']},
-  {type:'us',symbol:'META',name:'Meta Platforms',yahooSymbol:'META',keywords:['メタ']}
+  {type:'us',symbol:'META',name:'Meta Platforms',yahooSymbol:'META',keywords:['メタ']},
+  {type:'us',symbol:'AMD',name:'Advanced Micro Devices',yahooSymbol:'AMD',keywords:['エーエムディー']},
+  {type:'us',symbol:'AVGO',name:'Broadcom',yahooSymbol:'AVGO',keywords:['ブロードコム']}
 ];

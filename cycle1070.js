@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v9.1 - 1070日サイクルエンジン
+// Bitcoin1070 PRO v9.2 - 1070日サイクルエンジン
 (() => {
   'use strict';
   const DAY = 86400000;

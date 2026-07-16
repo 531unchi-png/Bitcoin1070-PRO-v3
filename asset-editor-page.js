@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v9.1 - 銘柄かんたん追加・編集強化
+// Bitcoin1070 PRO v9.2 - シンボル／銘柄名 横断検索
 const DEFAULT_ASSETS = [];
 let assets = loadAssetsFromStorage(DEFAULT_ASSETS);
 let transactionHistory = loadHistoryFromStorage();
@@ -13,16 +13,35 @@ function normalizeSymbol(value,type){
     if(type==='jp') symbol=symbol.replace(/\.T$/i,'');
     return symbol;
 }
+function searchableValues(item){
+  return [item.symbol,item.name,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])].map(v=>String(v||'').toLowerCase());
+}
 function findMaster(query,type){
     const q=String(query||'').trim().toLowerCase();
     if(!q) return null;
-    return ASSET_MASTER.find(item => item.type===type && [item.symbol,item.name,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])].some(v=>String(v||'').toLowerCase()===q)) ||
-      ASSET_MASTER.find(item => item.type===type && [item.symbol,item.name,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])].some(v=>String(v||'').toLowerCase().includes(q)));
+    const exact = ASSET_MASTER.find(item => searchableValues(item).some(v=>v===q));
+    if(exact) return exact;
+    const preferred = ASSET_MASTER.find(item => item.type===type && searchableValues(item).some(v=>v.includes(q)));
+    return preferred || ASSET_MASTER.find(item => searchableValues(item).some(v=>v.includes(q))) || null;
 }
 function getSuggestions(query,type){
     const q=String(query||'').trim().toLowerCase();
-    if(!q) return ASSET_MASTER.filter(item=>item.type===type).slice(0,6);
-    return ASSET_MASTER.filter(item=>item.type===type && [item.symbol,item.name,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])].some(v=>String(v||'').toLowerCase().includes(q))).slice(0,8);
+    const source = q
+      ? ASSET_MASTER.filter(item=>searchableValues(item).some(v=>v.includes(q)))
+      : ASSET_MASTER.filter(item=>item.type===type);
+    return source.sort((a,b)=>{
+      const ae=a.type===type?0:1, be=b.type===type?0:1;
+      if(ae!==be) return ae-be;
+      const ax=searchableValues(a).some(v=>v===q)?0:1, bx=searchableValues(b).some(v=>v===q)?0:1;
+      return ax-bx || a.symbol.localeCompare(b.symbol,'ja');
+    }).slice(0,10);
+}
+function setAssetType(nextType){
+  const select=document.getElementById('newAssetType');
+  if(select && select.value!==nextType){
+    select.value=nextType;
+    updateTypeFields();
+  }
 }
 function renderAssetEditor() {
     const editor=document.getElementById('editor'); if(!editor) return;
@@ -33,14 +52,14 @@ function renderAssetEditor() {
         : `<label>Yahoo Financeコード<input type="text" data-index="${index}" data-field="yahooSymbol" value="${escapeHtml(asset.yahooSymbol||'')}" placeholder="例：285A.T / NVDA"></label>`;
       return `<section class="card editor-page-item"><div class="editor-page-title"><div><strong>${escapeHtml(asset.name)}</strong><span>${escapeHtml(asset.symbol)} ・ ${typeLabel(asset.type)}</span></div><button type="button" class="delete-button" data-delete-index="${index}">🗑 削除</button></div><div class="editor-page-grid"><label>銘柄名<input type="text" data-index="${index}" data-field="name" value="${escapeHtml(asset.name)}"></label><label>数量・株数<input type="number" inputmode="decimal" step="any" min="0" data-index="${index}" data-field="amount" value="${asset.amount}"></label><label>平均取得単価（${costUnit}）<input type="number" inputmode="decimal" step="any" min="0" data-index="${index}" data-field="cost" value="${asset.cost}"></label>${marketCode}</div></section>`;
     }).join('');
-    editor.innerHTML=`${items||'<div class="card"><p>保有資産がまだありません。</p></div>'}<section class="card add-asset-card"><h2>➕ 新しい銘柄を追加</h2><p class="small">種類を選び、シンボルまたは銘柄名を入力すると候補が表示されます。</p><div class="editor-page-grid"><label>種類<select id="newAssetType"><option value="crypto">仮想通貨</option><option value="jp">日本株</option><option value="us">米国株</option></select></label><label class="asset-search-label">シンボル・銘柄検索<input id="newAssetSymbol" type="text" autocomplete="off" placeholder="BTC / 285A / NVDA / キオクシア"><div id="assetSuggestions" class="asset-suggestions hidden"></div></label><label>銘柄名<input id="newAssetName" type="text" placeholder="候補選択で自動入力"></label><label>数量・株数<input id="newAssetAmount" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label>平均取得単価 <span id="costUnitHint" class="field-hint">円</span><input id="newAssetCost" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label id="coinGeckoField">CoinGecko ID<input id="newCoinGeckoId" type="text" placeholder="候補選択で自動入力"></label><label id="yahooField" class="hidden">Yahoo Financeコード<input id="newYahooSymbol" type="text" placeholder="候補選択で自動入力"></label></div><div id="autoFillStatus" class="auto-fill-status">💡 例：日本株で「285A」→ キオクシアホールディングス／285A.T</div><button id="addAssetButton" type="button" class="full-width-button">➕ 銘柄を追加</button></section>`;
+    editor.innerHTML=`${items||'<div class="card"><p>保有資産がまだありません。</p></div>'}<section class="card add-asset-card"><h2>➕ 新しい銘柄を追加</h2><p class="small">シンボルでも銘柄名でも検索できます。種類が違っていても候補選択時に自動で切り替わります。</p><div class="editor-page-grid"><label>種類<select id="newAssetType"><option value="crypto">仮想通貨</option><option value="jp">日本株</option><option value="us">米国株</option></select></label><label class="asset-search-label">シンボル・銘柄検索<input id="newAssetSymbol" type="text" autocomplete="off" placeholder="BTC / 285A / NVDA / キオクシア"><div id="assetSuggestions" class="asset-suggestions hidden"></div></label><label>銘柄名<input id="newAssetName" type="text" placeholder="候補選択で自動入力"></label><label>数量・株数<input id="newAssetAmount" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label>平均取得単価 <span id="costUnitHint" class="field-hint">円</span><input id="newAssetCost" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label id="coinGeckoField">CoinGecko ID<input id="newCoinGeckoId" type="text" placeholder="候補選択で自動入力"></label><label id="yahooField" class="hidden">Yahoo Financeコード<input id="newYahooSymbol" type="text" placeholder="候補選択で自動入力"></label></div><div id="autoFillStatus" class="auto-fill-status">💡 例：「3556」または「リネット」で検索 → リネットジャパングループ／3556.T</div><button id="addAssetButton" type="button" class="full-width-button">➕ 銘柄を追加</button></section>`;
     editor.querySelectorAll('[data-delete-index]').forEach(b=>b.addEventListener('click',()=>deleteAsset(Number(b.dataset.deleteIndex))));
     bindAddForm();
 }
 function bindAddForm(){
   const type=document.getElementById('newAssetType'), input=document.getElementById('newAssetSymbol');
   type?.addEventListener('change',()=>{ updateTypeFields(); clearAutoFields(); showSuggestions(); });
-  input?.addEventListener('input',()=>{ const hit=findMaster(input.value,type.value); if(hit && normalizeSymbol(input.value,type.value)===hit.symbol) applyMaster(hit,false); showSuggestions(); });
+  input?.addEventListener('input',()=>{ const hit=findMaster(input.value,type.value); if(hit && searchableValues(hit).some(v=>v===String(input.value||'').trim().toLowerCase())) applyMaster(hit,false); showSuggestions(); });
   input?.addEventListener('focus',showSuggestions);
   document.addEventListener('click',e=>{ if(!e.target.closest('.asset-search-label')) document.getElementById('assetSuggestions')?.classList.add('hidden'); },{once:true});
   document.getElementById('addAssetButton')?.addEventListener('click',addAsset);
@@ -55,10 +74,11 @@ function updateTypeFields(){
 function clearAutoFields(){ ['newAssetName','newCoinGeckoId','newYahooSymbol'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
 function showSuggestions(){
   const box=document.getElementById('assetSuggestions'), input=document.getElementById('newAssetSymbol'), type=document.getElementById('newAssetType')?.value; if(!box||!input) return;
-  const list=getSuggestions(input.value,type); box.innerHTML=list.map(item=>`<button type="button" class="asset-suggestion" data-symbol="${escapeHtml(item.symbol)}"><strong>${escapeHtml(item.symbol)}</strong><span>${escapeHtml(item.name)}</span><small>${escapeHtml(item.coinGeckoId||item.yahooSymbol||'')}</small></button>`).join('')||'<div class="empty-suggestion">候補なし。手入力でも登録できます。</div>';
-  box.classList.remove('hidden'); box.querySelectorAll('[data-symbol]').forEach(btn=>btn.addEventListener('click',()=>{ const item=ASSET_MASTER.find(x=>x.type===type&&x.symbol===btn.dataset.symbol); if(item) applyMaster(item,true); }));
+  const list=getSuggestions(input.value,type); box.innerHTML=list.map(item=>`<button type="button" class="asset-suggestion" data-symbol="${escapeHtml(item.symbol)}"><strong>${escapeHtml(item.symbol)}</strong><span>${escapeHtml(item.name)}</span><small>${escapeHtml(typeLabel(item.type))} ・ ${escapeHtml(item.coinGeckoId||item.yahooSymbol||'')}</small></button>`).join('')||'<div class="empty-suggestion">候補なし。手入力でも登録できます。</div>';
+  box.classList.remove('hidden'); box.querySelectorAll('[data-symbol]').forEach(btn=>btn.addEventListener('click',()=>{ const item=ASSET_MASTER.find(x=>x.symbol===btn.dataset.symbol); if(item) applyMaster(item,true); }));
 }
 function applyMaster(item,close){
+  setAssetType(item.type);
   document.getElementById('newAssetSymbol').value=item.symbol;
   document.getElementById('newAssetName').value=item.name;
   document.getElementById('newCoinGeckoId').value=item.coinGeckoId||'';
@@ -70,7 +90,7 @@ function collectChanges(){ document.querySelectorAll('#editor [data-index][data-
 function saveChanges(){ collectChanges(); saveAssetsToStorage(assets); transactionHistory.unshift({id:Date.now(),date:new Date().toISOString(),action:'保有資産を編集'}); saveHistoryToStorage(transactionHistory); const button=document.getElementById('saveButton'); if(button){const old=button.textContent;button.textContent='✅ 保存しました';button.disabled=true;setTimeout(()=>{button.textContent=old;button.disabled=false},1400);} let feedback=document.getElementById('saveFeedback'); if(!feedback){feedback=document.createElement('div');feedback.id='saveFeedback';feedback.className='save-feedback';document.querySelector('.sticky-save-bar')?.appendChild(feedback);} feedback.textContent='ホーム・資産ページにも保存内容が反映されました。'; renderAssetEditor(); }
 function deleteAsset(index){ const asset=assets[index]; if(!asset||!confirm(`${asset.name}（${asset.symbol}）を削除しますか？`))return; assets.splice(index,1); transactionHistory.unshift({id:Date.now(),date:new Date().toISOString(),action:`${asset.name}（${asset.symbol}）を削除`}); saveAssetsToStorage(assets);saveHistoryToStorage(transactionHistory);renderAssetEditor(); }
 function addAsset(){
-  collectChanges(); const type=document.getElementById('newAssetType').value; let symbol=normalizeSymbol(document.getElementById('newAssetSymbol').value,type); const auto=findMaster(symbol,type); if(auto) applyMaster(auto,false);
+  collectChanges(); const type=document.getElementById('newAssetType').value; let symbol=normalizeSymbol(document.getElementById('newAssetSymbol').value,type); const auto=findMaster(symbol,type); if(auto){ applyMaster(auto,false); symbol=auto.symbol; }
   const name=document.getElementById('newAssetName').value.trim(), amount=Math.max(0,Number(document.getElementById('newAssetAmount').value)||0), cost=Math.max(0,Number(document.getElementById('newAssetCost').value)||0), coinGeckoId=document.getElementById('newCoinGeckoId').value.trim().toLowerCase(), yahooSymbol=document.getElementById('newYahooSymbol').value.trim().toUpperCase();
   if(!symbol||!name)return alert('シンボルと銘柄名を入力してください');
   if(assets.some(a=>a.type===type&&normalizeSymbol(a.symbol,a.type)===symbol))return alert('同じ銘柄がすでに登録されています');
