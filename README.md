@@ -1,10 +1,8 @@
-# Bitcoin1070 PRO v10.1
+# Bitcoin1070 PRO v10.2
 
-## 主な変更
-- シンボル・銘柄名のオンライン横断検索
-- 日本株、米国株、仮想通貨の候補自動表示
-- Yahoo Financeコード／CoinGecko IDの自動入力
-- API障害時も日本株コードから `.T` を自動生成
-- PWAキャッシュ v10.1
+iPhoneアップロード用完成版。v10.1の既存機能を維持し、資産倍増ナビを追加しました。
 
-API v10.1を先に更新してからPRO v10.1を反映してください。
+## 追加ファイル
+- doubling-navi.html
+- doubling-navi.js
+- V10_2_CHANGELOG.md

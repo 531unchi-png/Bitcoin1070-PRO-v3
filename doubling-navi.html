@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="ja"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>資産倍増ナビ | Bitcoin1070 PRO v10.2</title><link rel="stylesheet" href="style.css">
+</head><body><header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v10.2</span></div><h1>🚀 資産倍増ナビ</h1><p>追加資金・配分・購入上限を数字で管理</p></header>
+<main class="container app-page doubling-page">
+<section class="card doubling-hero"><span class="eyebrow">GROWTH NAVIGATOR</span><h2>退場を避けながら、資金効率を高める</h2><p>保有資産の偏りを確認し、新しい入金を不足分へ配分します。将来の利益を保証する機能ではありません。</p></section>
+
+<section class="card"><h2>💴 今月の追加資金</h2><label class="nav-field">追加できる金額（円）<input id="monthlyContribution" type="number" inputmode="numeric" min="0" step="1000" value="50000"></label><button id="calculateAllocation" class="page-link-button nav-action" type="button">配分を計算</button><div id="allocationResult" class="allocation-result"></div></section>
+
+<section class="card"><h2>🎯 目標配分</h2><p class="small">合計が100%になるよう設定してください。現金は暴落買い資金を含みます。</p><div class="target-grid">
+<label>🪙 仮想通貨<input id="targetCrypto" type="number" inputmode="decimal" min="0" max="100" value="35"><span>%</span></label>
+<label>🇯🇵 日本株<input id="targetJp" type="number" inputmode="decimal" min="0" max="100" value="25"><span>%</span></label>
+<label>🇺🇸 米国株<input id="targetUs" type="number" inputmode="decimal" min="0" max="100" value="25"><span>%</span></label>
+<label>💵 現金<input id="targetCash" type="number" inputmode="decimal" min="0" max="100" value="15"><span>%</span></label>
+</div><div id="targetTotal" class="target-total">合計 100%</div><div id="balanceStatus" class="balance-status"></div></section>
+
+<section class="card"><h2>🛟 暴落買い資金メーター</h2><div class="cash-grid"><label class="nav-field">現在の現金余力（円）<input id="currentCash" type="number" inputmode="numeric" min="0" step="1000" value="0"></label><label class="nav-field">目標金額（円）<input id="targetCashAmount" type="number" inputmode="numeric" min="0" step="1000" value="300000"></label></div><div class="reserve-meter"><div id="reserveMeterBar"></div></div><div id="reserveMeterText" class="reserve-meter-text">0%</div></section>
+
+<section class="card"><h2>🧮 購入上限計算</h2><p class="small">1回の取引で失ってよい金額と損切り幅から、購入額の上限を逆算します。</p><div class="cash-grid"><label class="nav-field">許容損失額（円）<input id="riskAmount" type="number" inputmode="numeric" min="0" step="1000" value="10000"></label><label class="nav-field">損切り幅（%）<input id="stopLossPercent" type="number" inputmode="decimal" min="0.1" max="100" step="0.1" value="8"></label></div><div class="risk-answer"><span>購入上限</span><strong id="maxPosition">¥125,000</strong><small id="riskExplanation">10,000円 ÷ 8% で計算</small></div></section>
+
+<section class="card"><h2>📊 現在の資産配分</h2><div id="currentAllocation" class="current-allocation">保有資産を計算中...</div></section>
+<section class="card safety-rules"><h2>🧱 生存ルール</h2><div class="rule-list"><p>① 追加資金を一度に使い切らない</p><p>② 1銘柄への過度な集中を避ける</p><p>③ 損失許容額を決めてから買う</p><p>④ 現金余力を残し、暴落時の選択肢を守る</p><p>⑤ 1070日理論やスコアだけで売買を決めない</p></div></section>
+</main>
+<nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html"><span>⌂</span><small>ホーム</small></a><a href="market.html"><span>📈</span><small>相場</small></a><a href="portfolio.html" class="active"><span>💼</span><small>資産</small></a><a href="news.html"><span>📰</span><small>情報</small></a><a href="settings.html"><span>⚙️</span><small>設定</small></a></nav>
+<script src="stocks.js"></script><script src="storage.js"></script><script src="portfolio.js"></script><script src="doubling-navi.js"></script><script src="app-shell.js"></script></body></html>
