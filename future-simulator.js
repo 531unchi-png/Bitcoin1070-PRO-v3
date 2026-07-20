@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v11.1 - AI未来資産シミュレーター
+// Bitcoin1070 PRO v11.2 - AI未来資産シミュレーター
 (() => {
   'use strict';
   const YEARS = [5, 10, 15, 20, 25, 30];
@@ -76,6 +76,7 @@
   function projectPrice(asset, years, scenario) {
     const p = profileFor(asset);
     const rate = adjustedRate(p[scenario], years);
+    if (!(Number(asset.currentPriceJpy) > 0)) return 0;
     let projected = asset.currentPriceJpy * Math.pow(Math.max(0.01, 1 + rate), years) * survivalFactor(asset, years, scenario);
     if (settings().real) projected /= Math.pow(1 + INFLATION, years);
     return Math.max(0, projected);
@@ -179,7 +180,7 @@
       list.innerHTML = '<div class="empty-state">条件に合う銘柄がありません。検索語または分類を変更してください。</div>';
       return;
     }
-    $('futureCatalogStatus').textContent = `${visible.length}銘柄を表示中（価格取得済み ${catalogEvaluations.filter(a=>a.currentPriceJpy>0).length}銘柄）`;
+    $('futureCatalogStatus').textContent = `${visible.length}銘柄を表示中（価格取得済み ${catalogEvaluations.filter(a=>a.currentPriceJpy>0).length}／登録 ${catalogEvaluations.length}銘柄）`;
     list.innerHTML = visible.map(asset => {
       const p = profileFor(asset);
       const bear = projectPrice(asset, selectedYears, 'bear');
@@ -190,8 +191,8 @@
       const rates = `年率前提 弱気${pct(adjustedRate(p.bear,selectedYears)*100)}／標準${pct(adjustedRate(p.base,selectedYears)*100)}／強気${pct(adjustedRate(p.bull,selectedYears)*100)}`;
       return `<article class="future-asset-card">
         <div class="future-asset-head"><div><strong>${esc(asset.name)}</strong><span>${esc(asset.symbol)} ・ ${esc(p.label)}</span></div><span class="risk-pill">リスク ${esc(p.risk)}</span></div>
-        <div class="future-current">現在価格 <strong>${yen(asset.currentPriceJpy)}</strong>${asset.amount > 0 ? ` ／ 保有 ${asset.amount.toLocaleString('ja-JP')}単位 ／ 保有評価 ${yen(asset.marketValueJpy)}` : ' ／ 未保有（1単位で試算）'}</div>
-        <div class="future-price-grid"><div class="bear"><span>弱気</span><strong>${yen(bear)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(bear * asset.amount)}` : `1単位 ${yen(bear)}`}</small></div><div class="base"><span>標準</span><strong>${yen(base)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(base * asset.amount)}` : `1単位 ${yen(base)}`}</small></div><div class="bull"><span>強気</span><strong>${yen(bull)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(bull * asset.amount)}` : `1単位 ${yen(bull)}`}</small></div></div>
+        <div class="future-current">現在価格 <strong>${asset.currentPriceJpy > 0 ? yen(asset.currentPriceJpy) : '価格未取得'}</strong>${asset.priceSource === 'cost' ? ' <em class="price-source-note">取得単価による暫定値</em>' : ''}${asset.amount > 0 ? ` ／ 保有 ${asset.amount.toLocaleString('ja-JP')}単位 ／ 保有評価 ${asset.currentPriceJpy > 0 ? yen(asset.marketValueJpy) : '--'}` : ' ／ 未保有（1単位で試算）'}</div>
+        ${asset.currentPriceJpy > 0 ? `<div class="future-price-grid"><div class="bear"><span>弱気</span><strong>${yen(bear)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(bear * asset.amount)}` : `1単位 ${yen(bear)}`}</small></div><div class="base"><span>標準</span><strong>${yen(base)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(base * asset.amount)}` : `1単位 ${yen(base)}`}</small></div><div class="bull"><span>強気</span><strong>${yen(bull)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(bull * asset.amount)}` : `1単位 ${yen(bull)}`}</small></div></div>` : `<div class="future-price-missing">現在価格を取得できないため将来価格は未計算です。「再計算」を押してください。銘柄自体は一覧から消えません。</div>`}
         <div class="future-verdict"><strong>${selectedYears}年後評価：${trend}</strong><span>予測信頼度 ${c}%</span></div>
         <small class="future-rate-note">${rates}</small><p>${assetAdvice(asset, p, c)}</p>
       </article>`;
@@ -263,9 +264,37 @@
     renderChart();
   }
 
+  function normalizedSymbol(value) {
+    return String(value || '').trim().toUpperCase().replace(/\.T$/, '');
+  }
+
+  function assetKeys(asset) {
+    const keys = new Set();
+    const type = asset?.type || '';
+    const symbol = normalizedSymbol(asset?.symbol);
+    const yahoo = normalizedSymbol(asset?.yahooSymbol);
+    if (symbol) keys.add(`${type}:${symbol}`);
+    if (yahoo) keys.add(`${type}:${yahoo}`);
+    // 旧バージョンで使われていた略号との互換性
+    const aliases = {MHI:'7011', ADVT:'6857', FJK:'5803', VRAIN:'135A'};
+    if (aliases[symbol]) keys.add(`${type}:${aliases[symbol]}`);
+    Object.entries(aliases).forEach(([alias, code]) => {
+      if (symbol === code || yahoo === code) keys.add(`${type}:${alias}`);
+    });
+    return [...keys];
+  }
+
+  function priceFallbackForHolding(asset, usdJpy) {
+    const cost = Number(asset?.cost || 0);
+    if (!(cost > 0)) return 0;
+    return asset.type === 'us' ? cost * usdJpy : cost;
+  }
+
   function holdingMap() {
     const map = new Map();
-    evaluations.forEach(a => map.set(`${a.type}:${String(a.symbol).toUpperCase()}`, a));
+    const raw = Array.isArray(window.assets) ? window.assets : (typeof assets !== 'undefined' && Array.isArray(assets) ? assets : []);
+    raw.filter(a => Number(a.amount || 0) > 0).forEach(a => assetKeys(a).forEach(key => map.set(key, a)));
+    evaluations.forEach(a => assetKeys(a).forEach(key => map.set(key, a)));
     return map;
   }
 
@@ -310,30 +339,76 @@
     const usdJpy = Number(stockData.USDJPY || stocks.USDJPY || 160);
     const held = holdingMap();
     catalogEvaluations = all.map(a => {
-      const key = `${a.type}:${String(a.symbol).toUpperCase()}`;
-      const holding = held.get(key);
+      const holding = assetKeys(a).map(key => held.get(key)).find(Boolean);
       let currentPrice = 0;
       if (a.type === 'crypto') currentPrice = Number(cryptoPrices[String(a.symbol).toUpperCase()] || latestCryptoPrices?.[String(a.symbol).toUpperCase()] || 0);
       else currentPrice = Number(stockData[String(a.symbol).toUpperCase()] || stocks[String(a.symbol).toUpperCase()] || 0);
-      const currentPriceJpy = a.type === 'us' ? currentPrice * usdJpy : currentPrice;
+      let currentPriceJpy = a.type === 'us' ? currentPrice * usdJpy : currentPrice;
       const amount = Number(holding?.amount || 0);
-      return {...a, amount, cost:Number(holding?.cost||0), currentPrice, currentPriceJpy, marketValueJpy:amount*currentPriceJpy, usdJpy};
-    }).filter(a => a.currentPriceJpy > 0);
+      let priceSource = currentPriceJpy > 0 ? 'latest' : 'missing';
+      if (!(currentPriceJpy > 0) && holding) {
+        currentPriceJpy = priceFallbackForHolding(holding, usdJpy);
+        if (currentPriceJpy > 0) {
+          currentPrice = a.type === 'us' ? currentPriceJpy / usdJpy : currentPriceJpy;
+          priceSource = 'cost';
+        }
+      }
+      return {...a, amount, cost:Number(holding?.cost||0), currentPrice, currentPriceJpy, marketValueJpy:amount*currentPriceJpy, usdJpy, priceSource};
+    });
   }
 
   async function init() {
     try {
       loadSettings();
-      if (typeof fetchCryptoPrices === 'function') {
-        try { const fetched = await fetchCryptoPrices(); if (fetched) latestCryptoPrices = fetched; } catch (e) { console.warn('価格更新失敗、保存済み価格を使用:', e); }
+      $('futureStatus').textContent = '保有資産と全銘柄の最新価格を取得中...';
+
+      // stocks.js の自動初期化と競合しないよう、ここでも明示的に完了を待つ
+      if (typeof refreshStockPrices === 'function') {
+        try { await refreshStockPrices(); } catch (e) { console.warn('株価更新失敗、保存済み価格を使用:', e); }
       }
-      evaluations = typeof evaluateAssets === 'function' ? evaluateAssets().filter(a => a.amount > 0 && a.currentPriceJpy > 0) : [];
+      if (typeof fetchCryptoPrices === 'function') {
+        try { const fetched = await fetchCryptoPrices(); if (fetched) latestCryptoPrices = fetched; } catch (e) { console.warn('暗号資産価格更新失敗、保存済み価格を使用:', e); }
+      }
+
+      // 最新価格取得後に評価する。価格がない保有銘柄も消さない。
+      evaluations = typeof evaluateAssets === 'function'
+        ? evaluateAssets().filter(a => Number(a.amount || 0) > 0)
+        : [];
+
       await fetchCatalogPrices();
-      $('futureStatus').textContent = `保有${evaluations.length}銘柄・全体${catalogEvaluations.length}銘柄を取得済み価格から計算しています。`;
+
+      // カタログ側で取得できた価格を保有銘柄へ逆流させる。
+      const catalogByKey = new Map();
+      catalogEvaluations.forEach(a => assetKeys(a).forEach(key => catalogByKey.set(key, a)));
+      const stocks = typeof getStockPriceData === 'function' ? getStockPriceData() : {};
+      const usdJpy = Number(stocks.USDJPY || 160);
+      evaluations = evaluations.map(asset => {
+        const catalog = assetKeys(asset).map(key => catalogByKey.get(key)).find(Boolean);
+        let currentPriceJpy = Number(asset.currentPriceJpy || catalog?.currentPriceJpy || 0);
+        let priceSource = currentPriceJpy > 0 ? 'latest' : 'missing';
+        if (!(currentPriceJpy > 0)) {
+          currentPriceJpy = priceFallbackForHolding(asset, usdJpy);
+          if (currentPriceJpy > 0) priceSource = 'cost';
+        }
+        return {
+          ...asset,
+          currentPriceJpy,
+          currentPrice: asset.type === 'us' ? currentPriceJpy / usdJpy : currentPriceJpy,
+          marketValueJpy: Number(asset.amount || 0) * currentPriceJpy,
+          priceSource
+        };
+      });
+
+      const pricedHoldings = evaluations.filter(a => a.currentPriceJpy > 0).length;
+      const pricedCatalog = catalogEvaluations.filter(a => a.currentPriceJpy > 0).length;
+      const missingHoldings = evaluations.length - pricedHoldings;
+      $('futureStatus').textContent = missingHoldings > 0
+        ? `保有${evaluations.length}銘柄中${pricedHoldings}銘柄、全${catalogEvaluations.length}銘柄中${pricedCatalog}銘柄の価格を取得。未取得の保有${missingHoldings}銘柄は取得単価で暫定試算しています。`
+        : `保有${evaluations.length}銘柄・全${catalogEvaluations.length}銘柄を最新取得価格から計算しています。`;
       renderAll();
     } catch (error) {
       console.error(error);
-      $('futureStatus').textContent = '読み込みに失敗しました。通信状態と保有銘柄設定を確認してください。';
+      $('futureStatus').textContent = '読み込みに失敗しました。「再計算」を押すか、通信状態を確認してください。';
     }
   }
 
