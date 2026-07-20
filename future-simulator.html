@@ -2,21 +2,34 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>30年未来シミュレーター | Bitcoin1070 PRO v10.3</title><link rel="stylesheet" href="style.css">
+<title>AI未来資産シミュレーター | Bitcoin1070 PRO v11.0</title><link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head><body>
-<header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v10.3</span></div><h1>🔮 30年未来シミュレーター</h1><p>保有銘柄を5年刻みで弱気・標準・強気評価</p></header>
+<header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v11.0</span></div><h1>🔮 AI未来資産シミュレーター</h1><p>5年刻み・30年先まで、弱気／標準／強気を比較</p></header>
 <main class="container app-page future-page">
-<section class="card future-intro"><span class="eyebrow">LONG-TERM SCENARIO ENGINE</span><h2>忖度なしの長期シナリオ</h2><p>現在の保有数量と最新価格を基準に、5・10・15・20・25・30年後を試算します。予言ではなく、複数の成長率・失敗リスク・インフレを組み合わせたシナリオ分析です。</p><div class="future-status" id="futureStatus">最新価格を読み込み中...</div></section>
-<section class="card"><h2>⏳ 予測年数</h2><div id="yearButtons" class="future-year-buttons"></div><div class="future-options"><label><input type="checkbox" id="realValueToggle"> 物価上昇2%を差し引いた「現在価値」で表示</label></div></section>
+<section class="card future-intro"><span class="eyebrow">LONG-TERM SCENARIO ENGINE v11</span><h2>忖度なしの長期シナリオ</h2><p>現在の保有数量・取得できた最新価格・資産特性を基準に、複数の成長率と生存リスクを組み合わせて試算します。将来価格を断定する機能ではありません。</p><div class="future-status" id="futureStatus">最新価格を読み込み中...</div></section>
+
+<section class="card"><h2>⏳ 予測条件</h2><div id="yearButtons" class="future-year-buttons"></div>
+<div class="future-input-grid">
+<label><span>毎月の積立額</span><div class="input-with-unit"><input id="monthlyContribution" type="number" min="0" step="1000" value="0"><b>円</b></div></label>
+<label><span>目標資産</span><div class="input-with-unit"><input id="targetAmount" type="number" min="1000000" step="1000000" value="100000000"><b>円</b></div></label>
+</div>
+<div class="future-options"><label><input type="checkbox" id="realValueToggle"> 物価上昇2%を差し引いた「現在価値」で表示</label></div>
+<p class="small">積立は現在の資産配分を維持して毎月末に行う前提です。税金・手数料・配当は含みません。</p></section>
+
 <section class="future-summary-grid">
-  <article class="card scenario-card bear"><span>弱気シナリオ</span><strong id="bearTotal">¥0</strong><small id="bearChange">--</small></article>
-  <article class="card scenario-card base"><span>標準シナリオ</span><strong id="baseTotal">¥0</strong><small id="baseChange">--</small></article>
-  <article class="card scenario-card bull"><span>強気シナリオ</span><strong id="bullTotal">¥0</strong><small id="bullChange">--</small></article>
+  <article class="card scenario-card bear"><span>弱気シナリオ</span><strong id="bearTotal">¥0</strong><small id="bearChange">--</small><em id="bearTarget">--</em></article>
+  <article class="card scenario-card base"><span>標準シナリオ</span><strong id="baseTotal">¥0</strong><small id="baseChange">--</small><em id="baseTarget">--</em></article>
+  <article class="card scenario-card bull"><span>強気シナリオ</span><strong id="bullTotal">¥0</strong><small id="bullChange">--</small><em id="bullTarget">--</em></article>
 </section>
-<section class="card"><h2>📈 資産総額シナリオ</h2><canvas id="futureChart"></canvas><p class="small">追加投資・売買・配当再投資・税金は含みません。現在の保有数量を固定して試算します。</p></section>
-<section class="card"><div class="future-section-head"><div><h2>🧠 AIアドバイス</h2><p class="small">ポートフォリオ全体の弱点と可能性を機械的に評価</p></div><button type="button" id="recalculateFuture" class="score-refresh">↻ 再計算</button></div><div id="futureAdvice" class="future-advice">分析中...</div></section>
+
+<section class="card target-card"><div><span>🎯 目標到達スコア</span><strong id="targetScore">0 / 100</strong><p id="targetExplanation">計算中...</p></div><div class="target-meter"><i id="targetMeterFill"></i></div><small>統計的な達成確率ではなく、3シナリオの到達状況を100点化した参考指標です。</small></section>
+
+<section class="card"><h2>📈 資産総額シナリオ</h2><div class="chart-wrap"><canvas id="futureChart"></canvas></div><p class="small">グラフは現在の保有資産と設定した積立額を合算した試算です。</p></section>
+
+<section class="card"><div class="future-section-head"><div><h2>🧠 AI分析アドバイス</h2><p class="small">集中度・資産クラス・下振れ幅・長期生存性をルールベースで評価</p></div><button type="button" id="recalculateFuture" class="score-refresh">↻ 再計算</button></div><div id="futureAdvice" class="future-advice">分析中...</div></section>
+
 <section class="card"><h2>📋 銘柄別の予測</h2><div id="futureAssetList" class="future-asset-list"></div></section>
-<section class="card"><details><summary>計算ロジックと注意点</summary><div class="future-method"><p>銘柄タイプ、時価総額の性質、暗号資産の成熟度、企業株の一般的な長期成長率を使い、弱気・標準・強気の年率を設定しています。予測期間が長いほど成長率を逓減し、信頼度も下げています。</p><p>暗号資産は消滅・規制・競争リスクが大きいため、弱気側を厳しく評価します。個別株も事業環境や上場廃止の可能性があるため、30年間の保有継続を保証しません。</p></div></details></section>
+<section class="card"><details><summary>計算ロジックと注意点</summary><div class="future-method"><p>銘柄タイプごとに弱気・標準・強気の年率レンジを設定し、予測期間が長いほど成長率を逓減しています。暗号資産や個別成長株には、長期の競争・規制・上場廃止・技術陳腐化を反映する生存係数を適用します。</p><p>「AI分析」は外部生成AIへ個人データを送信するものではなく、端末内で動く説明可能なルールベース分析です。数値は売買推奨ではありません。</p></div></details></section>
 </main>
 <nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html"><span>⌂</span><small>ホーム</small></a><a href="market.html"><span>📈</span><small>相場</small></a><a href="portfolio.html" class="active"><span>💼</span><small>資産</small></a><a href="news.html"><span>📰</span><small>情報</small></a><a href="settings.html"><span>⚙️</span><small>設定</small></a></nav>
 <script src="stocks.js"></script><script src="storage.js"></script><script src="portfolio.js"></script><script src="future-simulator.js"></script><script src="app-shell.js"></script></body></html>
