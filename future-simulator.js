@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v11.0 - AI未来資産シミュレーター
+// Bitcoin1070 PRO v11.1 - AI未来資産シミュレーター
 (() => {
   'use strict';
   const YEARS = [5, 10, 15, 20, 25, 30];
@@ -6,6 +6,8 @@
   const SETTINGS_KEY = 'bitcoin1070_future_v11_settings';
   let selectedYears = 5;
   let evaluations = [];
+  let catalogEvaluations = [];
+  let displayMode = 'all';
   let chart = null;
 
   const $ = id => document.getElementById(id);
@@ -158,13 +160,27 @@
     return `標準ケースは成熟に伴う成長鈍化を織り込んでいます。個別株は指数より企業固有リスクが大きいため、業績悪化時の見直し条件を決めておくべきです。`;
   }
 
+  function visibleCatalogAssets() {
+    const query = String($('futureAssetSearch')?.value || '').trim().toLowerCase();
+    const type = $('futureTypeFilter')?.value || 'all';
+    const source = displayMode === 'holdings' ? evaluations : catalogEvaluations;
+    return source.filter(asset => {
+      if (type !== 'all' && asset.type !== type) return false;
+      if (!query) return true;
+      const haystack = [asset.name, asset.symbol, asset.reading, ...(asset.keywords || [])].join(' ').toLowerCase();
+      return haystack.includes(query);
+    });
+  }
+
   function renderAssets() {
     const list = $('futureAssetList');
-    if (!evaluations.length) {
-      list.innerHTML = '<div class="empty-state">価格を取得できる保有資産がありません。先に「保有資産を編集」から銘柄を追加してください。</div>';
+    const visible = visibleCatalogAssets();
+    if (!visible.length) {
+      list.innerHTML = '<div class="empty-state">条件に合う銘柄がありません。検索語または分類を変更してください。</div>';
       return;
     }
-    list.innerHTML = evaluations.map(asset => {
+    $('futureCatalogStatus').textContent = `${visible.length}銘柄を表示中（価格取得済み ${catalogEvaluations.filter(a=>a.currentPriceJpy>0).length}銘柄）`;
+    list.innerHTML = visible.map(asset => {
       const p = profileFor(asset);
       const bear = projectPrice(asset, selectedYears, 'bear');
       const base = projectPrice(asset, selectedYears, 'base');
@@ -174,8 +190,8 @@
       const rates = `年率前提 弱気${pct(adjustedRate(p.bear,selectedYears)*100)}／標準${pct(adjustedRate(p.base,selectedYears)*100)}／強気${pct(adjustedRate(p.bull,selectedYears)*100)}`;
       return `<article class="future-asset-card">
         <div class="future-asset-head"><div><strong>${esc(asset.name)}</strong><span>${esc(asset.symbol)} ・ ${esc(p.label)}</span></div><span class="risk-pill">リスク ${esc(p.risk)}</span></div>
-        <div class="future-current">現在価格 <strong>${yen(asset.currentPriceJpy)}</strong> ／ 保有評価 ${yen(asset.marketValueJpy)}</div>
-        <div class="future-price-grid"><div class="bear"><span>弱気</span><strong>${yen(bear)}</strong><small>保有評価 ${yen(bear * asset.amount)}</small></div><div class="base"><span>標準</span><strong>${yen(base)}</strong><small>保有評価 ${yen(base * asset.amount)}</small></div><div class="bull"><span>強気</span><strong>${yen(bull)}</strong><small>保有評価 ${yen(bull * asset.amount)}</small></div></div>
+        <div class="future-current">現在価格 <strong>${yen(asset.currentPriceJpy)}</strong>${asset.amount > 0 ? ` ／ 保有 ${asset.amount.toLocaleString('ja-JP')}単位 ／ 保有評価 ${yen(asset.marketValueJpy)}` : ' ／ 未保有（1単位で試算）'}</div>
+        <div class="future-price-grid"><div class="bear"><span>弱気</span><strong>${yen(bear)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(bear * asset.amount)}` : `1単位 ${yen(bear)}`}</small></div><div class="base"><span>標準</span><strong>${yen(base)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(base * asset.amount)}` : `1単位 ${yen(base)}`}</small></div><div class="bull"><span>強気</span><strong>${yen(bull)}</strong><small>${asset.amount > 0 ? `保有評価 ${yen(bull * asset.amount)}` : `1単位 ${yen(bull)}`}</small></div></div>
         <div class="future-verdict"><strong>${selectedYears}年後評価：${trend}</strong><span>予測信頼度 ${c}%</span></div>
         <small class="future-rate-note">${rates}</small><p>${assetAdvice(asset, p, c)}</p>
       </article>`;
@@ -247,6 +263,64 @@
     renderChart();
   }
 
+  function holdingMap() {
+    const map = new Map();
+    evaluations.forEach(a => map.set(`${a.type}:${String(a.symbol).toUpperCase()}`, a));
+    return map;
+  }
+
+  async function fetchCatalogPrices() {
+    const master = Array.isArray(window.B1070_ASSET_MASTER) ? window.B1070_ASSET_MASTER : [];
+    const custom = Array.isArray(window.assets) ? window.assets : (typeof assets !== 'undefined' && Array.isArray(assets) ? assets : []);
+    const unique = new Map();
+    [...master, ...custom].forEach(a => {
+      const key = `${a.type}:${String(a.symbol || '').toUpperCase()}`;
+      if (a.symbol && !unique.has(key)) unique.set(key, {...a});
+    });
+    const all = [...unique.values()];
+    const crypto = all.filter(a => a.type === 'crypto' && a.coinGeckoId);
+    const stocksList = all.filter(a => (a.type === 'jp' || a.type === 'us') && (a.yahooSymbol || a.symbol));
+
+    const cryptoPrices = {};
+    if (crypto.length) {
+      const ids = [...new Set(crypto.map(a=>String(a.coinGeckoId).toLowerCase()))];
+      try {
+        const url = `${CRYPTO_API_URL}?mode=crypto&ids=${encodeURIComponent(ids.join(','))}`;
+        const r = await fetch(url, {cache:'no-store'});
+        const data = await r.json();
+        crypto.forEach(a => {
+          const id = String(a.coinGeckoId).toLowerCase();
+          const value = Number(data?.prices?.[id]?.jpy ?? data?.[id]?.jpy);
+          if (value > 0) cryptoPrices[String(a.symbol).toUpperCase()] = value;
+        });
+      } catch (e) { console.warn('全暗号資産価格取得失敗', e); }
+    }
+
+    const stockData = {};
+    if (stocksList.length) {
+      try {
+        const pairs = stocksList.map(a => `${encodeURIComponent(String(a.symbol).toUpperCase())}:${encodeURIComponent(a.yahooSymbol || (a.type === 'jp' ? `${a.symbol}.T` : a.symbol))}`).join(',');
+        const r = await fetch(`${CRYPTO_API_URL}?symbols=${pairs}&t=${Date.now()}`, {cache:'no-store'});
+        const data = await r.json();
+        Object.entries(data || {}).forEach(([k,v]) => { if (Number(v)>0) stockData[String(k).toUpperCase()] = Number(v); });
+      } catch (e) { console.warn('全株価取得失敗', e); }
+    }
+
+    const stocks = typeof getStockPriceData === 'function' ? getStockPriceData() : {};
+    const usdJpy = Number(stockData.USDJPY || stocks.USDJPY || 160);
+    const held = holdingMap();
+    catalogEvaluations = all.map(a => {
+      const key = `${a.type}:${String(a.symbol).toUpperCase()}`;
+      const holding = held.get(key);
+      let currentPrice = 0;
+      if (a.type === 'crypto') currentPrice = Number(cryptoPrices[String(a.symbol).toUpperCase()] || latestCryptoPrices?.[String(a.symbol).toUpperCase()] || 0);
+      else currentPrice = Number(stockData[String(a.symbol).toUpperCase()] || stocks[String(a.symbol).toUpperCase()] || 0);
+      const currentPriceJpy = a.type === 'us' ? currentPrice * usdJpy : currentPrice;
+      const amount = Number(holding?.amount || 0);
+      return {...a, amount, cost:Number(holding?.cost||0), currentPrice, currentPriceJpy, marketValueJpy:amount*currentPriceJpy, usdJpy};
+    }).filter(a => a.currentPriceJpy > 0);
+  }
+
   async function init() {
     try {
       loadSettings();
@@ -254,7 +328,8 @@
         try { const fetched = await fetchCryptoPrices(); if (fetched) latestCryptoPrices = fetched; } catch (e) { console.warn('価格更新失敗、保存済み価格を使用:', e); }
       }
       evaluations = typeof evaluateAssets === 'function' ? evaluateAssets().filter(a => a.amount > 0 && a.currentPriceJpy > 0) : [];
-      $('futureStatus').textContent = evaluations.length ? `${evaluations.length}銘柄を取得済み価格から計算しています。` : '価格取得済みの保有銘柄がありません。';
+      await fetchCatalogPrices();
+      $('futureStatus').textContent = `保有${evaluations.length}銘柄・全体${catalogEvaluations.length}銘柄を取得済み価格から計算しています。`;
       renderAll();
     } catch (error) {
       console.error(error);
@@ -265,6 +340,13 @@
   document.addEventListener('DOMContentLoaded', () => {
     ['realValueToggle','monthlyContribution','targetAmount'].forEach(id => $(id)?.addEventListener(id === 'realValueToggle' ? 'change' : 'input', renderAll));
     $('recalculateFuture')?.addEventListener('click', init);
+    $('futureAssetSearch')?.addEventListener('input', renderAssets);
+    $('futureTypeFilter')?.addEventListener('change', renderAssets);
+    $('futureModeButtons')?.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+      displayMode = btn.dataset.mode;
+      $('futureModeButtons').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderAssets();
+    }));
     init();
   });
 })();
