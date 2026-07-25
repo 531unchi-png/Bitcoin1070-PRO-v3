@@ -432,12 +432,12 @@ function renderPortfolio(evaluations) {
             title: "🪙 仮想通貨"
         },
         {
-            type: "us",
-            title: "🇺🇸 米国株"
-        },
-        {
             type: "jp",
             title: "🇯🇵 日本株"
+        },
+        {
+            type: "us",
+            title: "🇺🇸 米国株"
         }
     ];
 
@@ -453,8 +453,8 @@ function renderPortfolio(evaluations) {
         }
 
         html += `
-            <section class="portfolio-section">
-                <h3>${group.title}</h3>
+            <section class="portfolio-section asset-anchor-section" id="assets-${group.type}">
+                <div class="portfolio-section-heading"><h3>${group.title}</h3><a href="#assetCategories" class="back-to-categories">ジャンルへ戻る ↑</a></div>
 
                 <div class="asset-card-list">
                     ${groupAssets
@@ -465,7 +465,13 @@ function renderPortfolio(evaluations) {
         `;
     });
 
-    container.innerHTML = html;
+    container.innerHTML = html || `
+        <div class="empty-holdings-state">
+            <strong>保有銘柄がまだ登録されていません</strong>
+            <p>資産編集から銘柄と数量を登録すると、ここに表示されます。</p>
+            <a href="portfolio-edit.html" class="page-link-button">✏️ 保有資産を登録</a>
+        </div>
+    `;
 }
 
 // =====================================
@@ -897,6 +903,31 @@ async function loadMarketData() {
     }
 }
 
+
+function setupHomeAssetControls() {
+    const refreshButton = document.getElementById("homeRefreshAsset");
+    if (refreshButton) {
+        refreshButton.addEventListener("click", async () => {
+            refreshButton.disabled = true;
+            refreshButton.textContent = "更新中...";
+            try { await loadMarketData(); } finally {
+                refreshButton.disabled = false;
+                refreshButton.textContent = "↻ 価格を更新";
+            }
+        });
+    }
+
+    document.querySelectorAll('a[href^="#assets-"]').forEach(link => {
+        link.addEventListener("click", event => {
+            const target = document.querySelector(link.getAttribute("href"));
+            if (!target) return;
+            event.preventDefault();
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+            history.replaceState(null, "", link.getAttribute("href"));
+        });
+    });
+}
+
 // =====================================
 // 起動
 // =====================================
@@ -908,6 +939,7 @@ document.addEventListener(
         setupBackupButton();
         setupRestoreButton();
         setupResetButton();
+        setupHomeAssetControls();
 
         loadMarketData();
     }

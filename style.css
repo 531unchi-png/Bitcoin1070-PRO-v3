@@ -1055,3 +1055,48 @@ button:disabled{opacity:.55;cursor:not-allowed}.loading-state{padding:18px;text-
 /* v11.2 価格取得・暫定評価表示 */
 .price-source-note{display:inline-block;margin-left:.35rem;padding:.18rem .45rem;border-radius:999px;background:rgba(245,166,35,.15);color:#f5b041;font-size:.72rem;font-style:normal}
 .future-price-missing{margin-top:.8rem;padding:1rem;border:1px dashed rgba(255,255,255,.18);border-radius:14px;color:#b8c2d8;background:rgba(255,255,255,.025);line-height:1.65}
+
+
+/* =====================================
+   v11.3 資産ファースト・ホーム
+   ===================================== */
+html { scroll-behavior: smooth; }
+.asset-first-header { padding-bottom: 22px; }
+.asset-first-home { display: flex; flex-direction: column; gap: 18px; }
+.home-asset-hero { margin-top: 0; text-align: left; position: relative; overflow: hidden; }
+.home-asset-hero::after { content:""; position:absolute; inset:auto -55px -75px auto; width:180px; height:180px; border-radius:50%; background:radial-gradient(circle, rgba(245,138,10,.22), transparent 68%); pointer-events:none; }
+.home-asset-hero h2 { font-size: clamp(2.55rem, 12vw, 4.5rem); line-height:1; margin:14px 0 12px; letter-spacing:-.04em; }
+.asset-hero-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; position:relative; z-index:1; }
+.asset-hero-actions a,.asset-hero-actions button { min-height:46px; border:1px solid rgba(255,255,255,.13); border-radius:14px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.055); color:#fff; font:inherit; font-weight:800; text-decoration:none; }
+.asset-hero-actions button { cursor:pointer; }
+.section-heading-row { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.section-heading-row h2 { margin:3px 0 0; }
+.section-heading-row > small { color:#98a6bb; text-align:right; }
+.category-nav-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.category-nav-button { appearance:none; text-decoration:none; color:inherit; min-width:0; min-height:122px; padding:16px 12px; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; border:1px solid rgba(255,255,255,.12); transition:transform .16s ease,border-color .16s ease,background .16s ease; }
+.category-nav-button:active { transform:scale(.98); }
+.category-nav-button span { font-size:.86rem; color:#cbd3df; }
+.category-nav-button strong { font-size:clamp(1.05rem,4.3vw,1.45rem); overflow-wrap:anywhere; }
+.category-nav-button small { color:#a9b4c6; font-size:.72rem; }
+.crypto-category { background:linear-gradient(145deg,rgba(147,105,255,.15),rgba(255,255,255,.025)); }
+.jp-category { background:linear-gradient(145deg,rgba(255,94,94,.13),rgba(255,255,255,.025)); }
+.us-category { background:linear-gradient(145deg,rgba(57,155,255,.13),rgba(255,255,255,.025)); }
+.home-holdings-card { padding-bottom:8px; }
+.compact-edit-link { color:#ffac3e; font-weight:800; text-decoration:none; padding:8px 10px; }
+.asset-anchor-section { scroll-margin-top:20px; padding-top:8px; }
+.portfolio-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:8px 0 12px; }
+.portfolio-section-heading h3 { margin:0; }
+.back-to-categories { color:#ffac3e; font-size:.78rem; text-decoration:none; white-space:nowrap; }
+.home-holdings-card .asset-card { border-radius:18px; background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025)); }
+.home-holdings-card .asset-card-header { align-items:flex-start; }
+.home-tools-section { padding:2px 0; }
+.compact-tools-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.compact-tools-grid .quick-card { min-height:112px; }
+.empty-holdings-state { padding:26px 14px; text-align:center; border:1px dashed rgba(255,255,255,.16); border-radius:18px; }
+.empty-holdings-state p { color:#aab5c5; }
+.home-score-card { margin-top:4px; }
+@media (max-width:390px) {
+  .category-nav-grid { grid-template-columns:1fr; }
+  .category-nav-button { min-height:92px; }
+  .asset-hero-actions { grid-template-columns:1fr; }
+}
