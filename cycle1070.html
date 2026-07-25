@@ -2,17 +2,18 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>1070日サイクル | Bitcoin1070 PRO v11.4</title><link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head><body>
-<header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v11.4</span></div><h1>⏳ 1070日サイクル</h1><p>半減期と1070日理論を組み合わせてBTCの現在地を確認</p></header>
+<title>1070日サイクル | Bitcoin1070 PRO v11.5</title>
+<link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head><body>
+<header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v11.5</span></div><h1>⏳ 1070日サイクル</h1><p>BTCの実チャートを土台に、半減期と1070日理論で未来の値幅を考察</p></header>
 <main class="container app-page cycle-page">
 <a class="page-back-link" href="index.html">← ホームへ戻る</a>
 
 <section class="card cycle-hero"><span class="eyebrow">CURRENT CYCLE</span><h2 id="cycleStage">判定中...</h2><h3 id="cycleHeadline">現在地を計算しています</h3><p id="cycleDetail"></p><div class="cycle-progress-label"><strong id="cycleProgress">--%</strong><span id="cycleNextEvent">次のイベントを計算中</span></div><div class="progress"><div class="progress-bar" id="cycleProgressBar"></div></div></section>
 
-<section class="card theory-rule"><h2>📌 1070日理論の基準</h2><div class="rule-correct">⭕ 最安値から約1070日前後で最高値を付けやすい</div><div class="rule-wrong">❌ 最高値から1070日ではない</div><p>過去サイクルでは「高値から底まで約1年前後下げる」→「底から約1070日でピーク候補」という流れが観測されました。半減期はその上昇局面の燃料になりやすい一方、回を重ねるごとに値幅は小さくなる前提で見ます。</p></section>
+<section class="card theory-rule"><h2>📌 1070日理論の基準</h2><div class="rule-correct">⭕ 最安値から約1070日前後で最高値を付けやすい</div><div class="rule-wrong">❌ 最高値から1070日ではない</div><p>過去サイクルでは「高値から底まで約1年前後下げる」→「底から約1070日でピーク候補」という流れが観測されました。今回はこの理論を、BTCの実際の長期チャートに重ねて未来の値幅を考える形に変更しています。</p></section>
 
 <section class="card cycle-scenario-overview">
-  <div class="future-section-head"><div><span class="eyebrow">BTC SCENARIOS</span><h2>₿ 現在のBTCシナリオ判定</h2><p class="small">1070日サイクル・半減期・Fear & Greed・短期変動を総合して表示</p></div></div>
+  <div class="future-section-head"><div><span class="eyebrow">BTC CURRENT VIEW</span><h2>₿ 現在の優勢シナリオ</h2><p class="small">Fear & Greed・短期変動・1070日進捗・半減期の位置を総合評価</p></div></div>
   <div class="cycle-market-mini">
     <div><span>現在価格</span><strong id="btcScenarioPrice">取得中...</strong></div>
     <div><span>Fear & Greed</span><strong id="btcScenarioFear">取得中...</strong></div>
@@ -29,30 +30,24 @@
   </div>
 </section>
 
-<section class="card"><h2>🔁 今回の想定シナリオ</h2><div class="cycle-timeline">
+<section class="card"><h2>📈 実BTCチャート + 延長予想</h2><p class="small">実際のBTC/JPY長期チャートをベースに、今後の<strong>底候補 → 半減期 → ピーク候補 → 次の底候補</strong>を延長表示します。予想ラインは強気・中立・弱気の3本です。</p><div class="chart-wrap cycle-chart-wrap large"><canvas id="realCycleChart"></canvas></div><div id="realChartNote" class="small cycle-summary-note">読み込み中...</div></section>
+
+<section class="card"><h2>🔁 次の重要イベント</h2><div class="cycle-timeline">
 <div class="timeline-item"><span>1</span><div><small>想定ピーク</small><strong id="assumedPeakDate">--</strong><p>2025年10月をピーク仮説として設定。</p></div></div>
 <div class="timeline-item"><span>2</span><div><small>底候補ゾーン</small><strong id="bottomWindowDate">--</strong><p>高値から約10〜14か月後を監視。</p></div></div>
-<div class="timeline-item featured"><span>3</span><div><small>基準となる仮置き底</small><strong id="bottomBaseDate">--</strong><p>底が確定するまでは仮説として扱います。</p></div></div>
-<div class="timeline-item"><span>4</span><div><small>次回ピーク候補ゾーン</small><strong id="nextPeakWindowDate">--</strong><p>各底候補日から1070日後を幅で表示。</p></div></div>
-<div class="timeline-item featured"><span>5</span><div><small>中央シナリオ</small><strong id="nextPeakBaseDate">--</strong><p>2026年10月中旬を仮置きした場合。</p></div></div>
+<div class="timeline-item featured"><span>3</span><div><small>中央の底仮説</small><strong id="bottomBaseDate">--</strong><p>中立シナリオの中心とする仮置き底。</p></div></div>
+<div class="timeline-item"><span>4</span><div><small>次回半減期</small><strong id="nextHalvingDate">--</strong><p>需給の追い風になりやすい重要イベント。</p></div></div>
+<div class="timeline-item featured"><span>5</span><div><small>次回ピーク候補</small><strong id="nextPeakBaseDate">--</strong><p>底から約1070日後のピーク候補。</p></div></div>
 </div></section>
 
-<section class="card"><h2>📊 過去サイクル比較チャート</h2><p class="small">各サイクルの底値を「100」として正規化し、底から1070日付近までの上昇カーブを比較します。過去2サイクルと現在サイクル仮説を同じ土俵で見られます。</p><div class="chart-wrap cycle-chart-wrap"><canvas id="cycleHistoryChart"></canvas></div><div id="cycleHistorySummary" class="small cycle-summary-note"></div></section>
+<section class="card btc-future-block"><div class="future-section-head"><div><span class="eyebrow">HALVING UNIT ROADMAP</span><h2>🚀 BTC 半減期単位シナリオ表</h2><p class="small">5年刻みではなく、半減期・ピーク候補・次の底候補ごとに価格の幅を表示</p></div></div>
+  <div class="cycle-longterm-note">2029年の次回ピーク候補、その後の底候補、さらに次の半減期サイクルまでを一覧化しています。値は<strong>現在価格を起点にした参考レンジ</strong>であり、保証値ではありません。</div>
+  <div class="table-wrap"><table class="cycle-table scenario-table"><thead><tr><th>イベント</th><th>弱気</th><th>中立</th><th>強気</th></tr></thead><tbody id="halvingRoadmapTableBody"></tbody></table></div>
+</section>
 
 <section class="card"><h2>🧮 過去サイクルの裏付け</h2><div class="table-wrap"><table class="cycle-table"><thead><tr><th>サイクル</th><th>高値→底</th><th>底</th><th>底+1070日</th><th>観察ポイント</th></tr></thead><tbody id="cycleHistoryTableBody"></tbody></table></div><p class="small">「底から約1070日」が本体であり、「高値から1070日」ではないことを再確認するための比較表です。</p></section>
 
-<section class="card btc-future-block"><div class="future-section-head"><div><span class="eyebrow">HALVING x 1070 MODEL</span><h2>🚀 BTC 20年シナリオ</h2><p class="small">半減期による供給減と、サイクル後半ほどリターンが逓減する前提で5年刻み・20年先まで表示</p></div></div>
-  <div class="cycle-longterm-note">現在価格を基準に、<strong>弱気・中立・強気</strong>の3シナリオを試算します。年ごとの正確な予言ではなく、長期の「幅」を把握するための参考値です。</div>
-  <div class="table-wrap"><table class="cycle-table scenario-table"><thead><tr><th>時点</th><th>弱気</th><th>中立</th><th>強気</th></tr></thead><tbody id="btcScenarioTableBody"></tbody></table></div>
-  <div class="chart-wrap cycle-chart-wrap"><canvas id="cycleFutureChart"></canvas></div>
-  <div class="future-summary-grid cycle-longterm-cards">
-    <article class="card scenario-card bear"><span>弱気の考え方</span><strong>守り優先</strong><small>底打ち遅延・半減期効果の弱体化・規制強化を織り込む</small></article>
-    <article class="card scenario-card base"><span>中立の考え方</span><strong>王道シナリオ</strong><small>底→1070日→次のピーク候補、半減期ごとに値幅は逓減</small></article>
-    <article class="card scenario-card bull"><span>強気の考え方</span><strong>採用拡大</strong><small>ETF・国家備蓄・長期需要増で半減期後の上振れが続く</small></article>
-  </div>
-</section>
-
 <section class="card"><h2>🛡️ 初老の投資・生存ルール</h2><p>爆益より「致命傷を負わない投資」。底や天井を一点で当てにいかず、候補ゾーン・分割・現金余力を重視します。</p><a class="primary-link" href="https://note.com/mr_japanpapac" target="_blank" rel="noopener noreferrer">note「初老の投資」を開く ↗</a></section>
-<section class="card"><h2>⚠️ 判断するときの注意</h2><ul class="plain-list"><li>1070日は価格を保証する期限ではありません。</li><li>底候補は2026年8〜12月という幅で監視します。</li><li>半減期だけではなく、金融環境・規制・流動性・投資家心理も合わせて見ます。</li><li>将来予測は外れて当然という前提で、分割と損失許容額を優先します。</li></ul></section>
+<section class="card"><h2>⚠️ 判断するときの注意</h2><ul class="plain-list"><li>実チャート延長は未来の保証ではなく、過去のリズムを当てはめた参考レンジです。</li><li>底候補は2026年8〜12月という幅で監視します。</li><li>半減期だけではなく、金融環境・規制・流動性・投資家心理も合わせて見ます。</li><li>将来予測は外れて当然という前提で、分割と損失許容額を優先します。</li></ul></section>
 <a class="page-back-link bottom" href="index.html">← ホームへ戻る</a>
 </main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html"><span>⌂</span><small>ホーム</small></a><a href="market.html" class="active"><span>📈</span><small>相場</small></a><a href="portfolio.html"><span>💼</span><small>資産</small></a><a href="news.html"><span>📰</span><small>情報</small></a><a href="settings.html"><span>⚙️</span><small>設定</small></a></nav><script src="cycle1070.js"></script><script src="app-shell.js"></script></body></html>
