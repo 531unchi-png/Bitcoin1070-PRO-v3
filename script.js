@@ -59,7 +59,7 @@ function getDaysBetween(startDate, endDate) {
 async function loadBitcoinMarket() {
     const btcPriceElement = document.getElementById("btcPrice");
     const btcChangeElement = document.getElementById("btcChange");
-    const cacheKey = "bitcoin1070_btc_market_v8_2";
+    const cacheKey = "bitcoin1070_btc_market_v11_6";
 
     const render = (price, change, cached = false) => {
         if (btcPriceElement) btcPriceElement.textContent = marketFormatYen(price) + (cached ? "*" : "");
@@ -70,30 +70,38 @@ async function loadBitcoinMarket() {
         }
     };
 
-    try {
-        const endpoint = "https://bitcoin1070-api.531unchi.workers.dev?mode=crypto&ids=bitcoin";
-        const response = await fetch(endpoint, { cache: "no-store" });
-        if (!response.ok) throw new Error(`BTC価格取得エラー: ${response.status}`);
-        const data = await response.json();
-        const price = Number(data?.prices?.bitcoin?.jpy);
-        const change = Number(data?.prices?.bitcoin?.jpy_24h_change) || 0;
-        if (!Number.isFinite(price) || price <= 0) throw new Error("BTC価格データ不正");
-        localStorage.setItem(cacheKey, JSON.stringify({ price, change, fetchedAt: data?.fetchedAt || new Date().toISOString() }));
-        render(price, change, false);
-        return { price, change };
-    } catch (error) {
-        console.error("BTC市場データ取得失敗:", error);
+    const endpoints = [
+        "https://bitcoin1070-api.531unchi.workers.dev?mode=crypto&ids=bitcoin",
+        "https://bitcoin1070-api.531unchi.workers.dev?mode=btc-cycle"
+    ];
+
+    for (const endpoint of endpoints) {
         try {
-            const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-            if (Number(cached?.price) > 0) {
-                render(Number(cached.price), Number(cached.change) || 0, true);
-                return { price: Number(cached.price), change: Number(cached.change) || 0 };
-            }
-        } catch {}
-        if (btcPriceElement) btcPriceElement.textContent = "取得失敗";
-        if (btcChangeElement) btcChangeElement.textContent = "--";
-        return { price: 0, change: 0 };
+            const response = await fetch(endpoint, { cache: "no-store" });
+            if (!response.ok) throw new Error(`BTC価格取得エラー: ${response.status}`);
+            const data = await response.json();
+            const price = Number(data?.prices?.bitcoin?.jpy ?? data?.currentPrice);
+            const change = Number(data?.prices?.bitcoin?.jpy_24h_change ?? data?.change24h ?? 0) || 0;
+            if (!Number.isFinite(price) || price <= 0) throw new Error("BTC価格データ不正");
+            localStorage.setItem(cacheKey, JSON.stringify({ price, change, fetchedAt: data?.fetchedAt || new Date().toISOString() }));
+            render(price, change, false);
+            return { price, change };
+        } catch (error) {
+            console.warn("BTC価格取得先で失敗:", endpoint, error);
+        }
     }
+
+    try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+        if (Number(cached?.price) > 0) {
+            render(Number(cached.price), Number(cached.change) || 0, true);
+            return { price: Number(cached.price), change: Number(cached.change) || 0 };
+        }
+    } catch (_) {}
+
+    if (btcPriceElement) btcPriceElement.textContent = "取得失敗";
+    if (btcChangeElement) btcChangeElement.textContent = "--";
+    return { price: 0, change: 0 };
 }
 
 // =====================================
@@ -101,67 +109,32 @@ async function loadBitcoinMarket() {
 // =====================================
 
 async function loadFearAndGreed() {
-    const fearElement =
-        document.getElementById("fear");
-
+    const fearElement = document.getElementById("fear");
+    const cacheKey = "bitcoin1070_fear_greed_v11_6";
     try {
         const response = await fetch(
-            "https://api.alternative.me/fng/?limit=1",
-            {
-                cache: "no-store"
-            }
+            "https://bitcoin1070-api.531unchi.workers.dev?mode=fear-greed",
+            { cache: "no-store" }
         );
-
-        if (!response.ok) {
-            throw new Error(
-                `Fear & Greed取得エラー: ${response.status}`
-            );
-        }
-
+        if (!response.ok) throw new Error(`Fear & Greed取得エラー: ${response.status}`);
         const data = await response.json();
-
-        const value =
-            Number(data?.data?.[0]?.value);
-
-        const classification =
-            data?.data?.[0]?.value_classification ||
-            "";
-
-        if (!Number.isFinite(value)) {
-            throw new Error(
-                "Fear & Greedデータが不正です"
-            );
-        }
-
-        if (fearElement) {
-            fearElement.innerHTML = `
-                ${value}
-                <div class="small">
-                    ${classification}
-                </div>
-            `;
-        }
-
-        return {
-            value,
-            classification
-        };
-
+        const value = Number(data?.value);
+        const classification = String(data?.classification || "");
+        if (!Number.isFinite(value)) throw new Error("Fear & Greedデータが不正です");
+        localStorage.setItem(cacheKey, JSON.stringify({ value, classification, fetchedAt: data?.fetchedAt || new Date().toISOString() }));
+        if (fearElement) fearElement.innerHTML = `${value}<div class="small">${classification}</div>`;
+        return { value, classification };
     } catch (error) {
-        console.error(
-            "Fear & Greed取得失敗:",
-            error
-        );
-
-        if (fearElement) {
-            fearElement.textContent =
-                "取得失敗";
-        }
-
-        return {
-            value: null,
-            classification: ""
-        };
+        console.warn("Fear & Greed取得失敗:", error);
+        try {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+            if (Number.isFinite(Number(cached?.value))) {
+                if (fearElement) fearElement.innerHTML = `${Number(cached.value)}*<div class="small">${cached.classification || "保存値"}</div>`;
+                return { value: Number(cached.value), classification: cached.classification || "" };
+            }
+        } catch (_) {}
+        if (fearElement) fearElement.textContent = "取得失敗";
+        return { value: null, classification: "" };
     }
 }
 
