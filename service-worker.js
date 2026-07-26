@@ -1,8 +1,8 @@
-// Bitcoin1070 PRO Service Worker v11.7
-const CACHE_NAME = 'bitcoin1070-pro-v11-7-build1';
+// Bitcoin1070 PRO Service Worker v11.8
+const CACHE_NAME = 'bitcoin1070-pro-v11-8-build1';
 const APP_FILES = [
   './','./index.html','./doubling-navi.html','./future-simulator.html','./market.html','./portfolio.html','./portfolio-edit.html','./analysis.html','./news.html','./settings.html','./cycle1070.html',
-  './style.css','./doubling-navi.js','./future-simulator.js','./app-shell.js','./asset-master.js','./asset-editor-page.js','./cycle1070.js','./score1070.js','./news-center.js','./storage.js','./stocks.js','./chart.js','./portfolio.js','./editor.js',
+  './style.css','./home-market-loader.js','./doubling-navi.js','./future-simulator.js','./app-shell.js','./asset-master.js','./asset-editor-page.js','./cycle1070.js','./score1070.js','./news-center.js','./storage.js','./stocks.js','./chart.js','./portfolio.js','./editor.js',
   './analytics.js','./technical.js','./monitoring.js','./script.js','./manifest.json','./icon-192.png','./icon-512.PNG'
 ];
 self.addEventListener('install', event => {
