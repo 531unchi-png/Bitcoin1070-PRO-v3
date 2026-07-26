@@ -1,4 +1,4 @@
-# Bitcoin1070 PRO v11.6
+# Bitcoin1070 PRO v11.7
 
 ## 追加・改善内容
 

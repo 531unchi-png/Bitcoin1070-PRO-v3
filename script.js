@@ -53,13 +53,27 @@ function getDaysBetween(startDate, endDate) {
 }
 
 // =====================================
+// 通信共通（タイムアウト付き）
+// =====================================
+async function fetchJsonWithTimeout(url, timeoutMs = 8000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+// =====================================
 // BTC価格・24時間変動
 // =====================================
-
 async function loadBitcoinMarket() {
     const btcPriceElement = document.getElementById("btcPrice");
     const btcChangeElement = document.getElementById("btcChange");
-    const cacheKey = "bitcoin1070_btc_market_v11_6";
+    const cacheKey = "bitcoin1070_btc_market_v11_7";
 
     const render = (price, change, cached = false) => {
         if (btcPriceElement) btcPriceElement.textContent = marketFormatYen(price) + (cached ? "*" : "");
@@ -70,24 +84,32 @@ async function loadBitcoinMarket() {
         }
     };
 
-    const endpoints = [
-        "https://bitcoin1070-api.531unchi.workers.dev?mode=crypto&ids=bitcoin",
-        "https://bitcoin1070-api.531unchi.workers.dev?mode=btc-cycle"
+    const sources = [
+        async () => {
+            const data = await fetchJsonWithTimeout("https://bitcoin1070-api.531unchi.workers.dev?mode=crypto&ids=bitcoin", 7000);
+            return {
+                price: Number(data?.prices?.bitcoin?.jpy),
+                change: Number(data?.prices?.bitcoin?.jpy_24h_change) || 0
+            };
+        },
+        async () => {
+            const data = await fetchJsonWithTimeout("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=jpy&include_24hr_change=true", 7000);
+            return {
+                price: Number(data?.bitcoin?.jpy),
+                change: Number(data?.bitcoin?.jpy_24h_change) || 0
+            };
+        }
     ];
 
-    for (const endpoint of endpoints) {
+    for (const source of sources) {
         try {
-            const response = await fetch(endpoint, { cache: "no-store" });
-            if (!response.ok) throw new Error(`BTC価格取得エラー: ${response.status}`);
-            const data = await response.json();
-            const price = Number(data?.prices?.bitcoin?.jpy ?? data?.currentPrice);
-            const change = Number(data?.prices?.bitcoin?.jpy_24h_change ?? data?.change24h ?? 0) || 0;
-            if (!Number.isFinite(price) || price <= 0) throw new Error("BTC価格データ不正");
-            localStorage.setItem(cacheKey, JSON.stringify({ price, change, fetchedAt: data?.fetchedAt || new Date().toISOString() }));
-            render(price, change, false);
-            return { price, change };
+            const result = await source();
+            if (!(result.price > 0)) throw new Error("BTC価格データ不正");
+            localStorage.setItem(cacheKey, JSON.stringify({ ...result, fetchedAt: new Date().toISOString() }));
+            render(result.price, result.change, false);
+            return result;
         } catch (error) {
-            console.warn("BTC価格取得先で失敗:", endpoint, error);
+            console.warn("BTC価格取得先で失敗:", error);
         }
     }
 
@@ -100,42 +122,53 @@ async function loadBitcoinMarket() {
     } catch (_) {}
 
     if (btcPriceElement) btcPriceElement.textContent = "取得失敗";
-    if (btcChangeElement) btcChangeElement.textContent = "--";
-    return { price: 0, change: 0 };
+    if (btcChangeElement) btcChangeElement.textContent = "再読み込みしてください";
+    return { price: 0, change: null };
 }
 
 // =====================================
 // Fear & Greed
 // =====================================
-
 async function loadFearAndGreed() {
     const fearElement = document.getElementById("fear");
-    const cacheKey = "bitcoin1070_fear_greed_v11_6";
-    try {
-        const response = await fetch(
-            "https://bitcoin1070-api.531unchi.workers.dev?mode=fear-greed",
-            { cache: "no-store" }
-        );
-        if (!response.ok) throw new Error(`Fear & Greed取得エラー: ${response.status}`);
-        const data = await response.json();
-        const value = Number(data?.value);
-        const classification = String(data?.classification || "");
-        if (!Number.isFinite(value)) throw new Error("Fear & Greedデータが不正です");
-        localStorage.setItem(cacheKey, JSON.stringify({ value, classification, fetchedAt: data?.fetchedAt || new Date().toISOString() }));
-        if (fearElement) fearElement.innerHTML = `${value}<div class="small">${classification}</div>`;
-        return { value, classification };
-    } catch (error) {
-        console.warn("Fear & Greed取得失敗:", error);
+    const cacheKey = "bitcoin1070_fear_greed_v11_7";
+
+    const sources = [
+        async () => {
+            const data = await fetchJsonWithTimeout("https://bitcoin1070-api.531unchi.workers.dev?mode=fear-greed", 7000);
+            return { value: Number(data?.value), classification: String(data?.classification || "") };
+        },
+        async () => {
+            const data = await fetchJsonWithTimeout("https://api.alternative.me/fng/?limit=1", 7000);
+            return {
+                value: Number(data?.data?.[0]?.value),
+                classification: String(data?.data?.[0]?.value_classification || "")
+            };
+        }
+    ];
+
+    for (const source of sources) {
         try {
-            const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-            if (Number.isFinite(Number(cached?.value))) {
-                if (fearElement) fearElement.innerHTML = `${Number(cached.value)}*<div class="small">${cached.classification || "保存値"}</div>`;
-                return { value: Number(cached.value), classification: cached.classification || "" };
-            }
-        } catch (_) {}
-        if (fearElement) fearElement.textContent = "取得失敗";
-        return { value: null, classification: "" };
+            const result = await source();
+            if (!Number.isFinite(result.value)) throw new Error("Fear & Greedデータ不正");
+            localStorage.setItem(cacheKey, JSON.stringify({ ...result, fetchedAt: new Date().toISOString() }));
+            if (fearElement) fearElement.innerHTML = `${result.value}<div class="small">${result.classification}</div>`;
+            return result;
+        } catch (error) {
+            console.warn("Fear & Greed取得先で失敗:", error);
+        }
     }
+
+    try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+        if (Number.isFinite(Number(cached?.value))) {
+            if (fearElement) fearElement.innerHTML = `${Number(cached.value)}*<div class="small">${cached.classification || "保存値"}</div>`;
+            return { value: Number(cached.value), classification: cached.classification || "" };
+        }
+    } catch (_) {}
+
+    if (fearElement) fearElement.innerHTML = `取得失敗<div class="small">通信後に再読み込み</div>`;
+    return { value: null, classification: "" };
 }
 
 // =====================================
@@ -263,13 +296,11 @@ function updateMarketComment({
         }
     }
 
-    commentElement.innerHTML =
-        comments
-            .map(
-                comment =>
-                    `<p>${comment}</p>`
-            )
-            .join("");
+    if (!comments.length) {
+        comments.push("市場データを取得できませんでした。通信状態を確認して再読み込みしてください。");
+    }
+
+    commentElement.innerHTML = comments.map(comment => `<p>${comment}</p>`).join("");
 }
 
 // =====================================
@@ -321,13 +352,17 @@ async function refreshMarketDashboard() {
 
     updateHalvingCountdown();
 
-    const [
-        bitcoinMarket,
-        fearAndGreed
-    ] = await Promise.all([
+    const [bitcoinResult, fearResult] = await Promise.allSettled([
         loadBitcoinMarket(),
         loadFearAndGreed()
     ]);
+
+    const bitcoinMarket = bitcoinResult.status === "fulfilled"
+        ? bitcoinResult.value
+        : { price: 0, change: null };
+    const fearAndGreed = fearResult.status === "fulfilled"
+        ? fearResult.value
+        : { value: null, classification: "" };
 
     updateMarketComment({
         btcChange:
