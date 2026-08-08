@@ -308,6 +308,8 @@ function updateMarketComment({
 // =====================================
 
 function initializeTradingView() {
+    // v12.0: market.html uses TradingView official Advanced Chart embed widget.
+    if (document.getElementById("tradingviewWidgetShell")) return;
     const container =
         document.getElementById("tradingview");
 

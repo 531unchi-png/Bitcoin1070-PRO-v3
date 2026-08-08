@@ -1,5 +1,5 @@
-// Bitcoin1070 PRO Service Worker v11.9
-const CACHE_NAME = 'bitcoin1070-pro-v11-9-build1';
+// Bitcoin1070 PRO Service Worker v12.0
+const CACHE_NAME = 'bitcoin1070-pro-v12-0-build1';
 const APP_FILES = [
   './','./index.html','./doubling-navi.html','./future-simulator.html','./market.html','./portfolio.html','./portfolio-edit.html','./analysis.html','./news.html','./settings.html','./cycle1070.html',
   './style.css','./market-tools.js','./home-market-loader.js','./doubling-navi.js','./future-simulator.js','./app-shell.js','./asset-master.js','./asset-editor-page.js','./cycle1070.js','./score1070.js','./news-center.js','./storage.js','./stocks.js','./chart.js','./portfolio.js','./editor.js',

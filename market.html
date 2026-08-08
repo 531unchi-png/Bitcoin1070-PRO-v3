@@ -2,9 +2,9 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>相場分析 | Bitcoin1070 PRO v11.9</title><link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://s3.tradingview.com/tv.js"></script></head><body>
-<header class="app-header market-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v11.9</span></div><h1>📈 相場分析</h1><p>BTCの現在地・1070日サイクル・判断材料を1画面で確認</p></header>
+<title>相場分析 | Bitcoin1070 PRO v12.0</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head><body>
+<header class="app-header market-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v12.0</span></div><h1>📈 相場分析</h1><p>BTCの現在地・1070日サイクル・判断材料を1画面で確認</p></header>
 <main class="container app-page market-page-v119">
 
 <section class="market-toolbar card">
@@ -38,7 +38,37 @@
 
 <section class="card market-memo-card"><div class="section-heading-row"><div><span class="eyebrow">MY MARKET NOTE</span><h2>📝 相場メモ</h2></div><button type="button" id="clearMarketMemo" class="text-button">消去</button></div><textarea id="marketMemo" rows="4" placeholder="例：BTCが○○円まで下がったら1回目の買い。2026年底候補は分割で入る。"></textarea><p class="small">この端末だけに保存されます。</p></section>
 
-<section class="card"><div class="section-heading"><div><h2>📊 TradingView</h2><p class="small">BTC/USDチャート。タップ・ピンチで拡大できます。</p></div><a class="mini-link" href="analysis.html">銘柄分析 →</a></div><div id="tradingview" class="tradingview-frame"></div></section>
+<section class="card tradingview-card"><div class="section-heading"><div><h2>📊 TradingView</h2><p class="small">BTC/USDリアルタイムチャート。時間足変更・インジケーター・描画ツールが使えます。</p></div><a class="mini-link" href="analysis.html">銘柄分析 →</a></div>
+<div class="tradingview-widget-shell" id="tradingviewWidgetShell">
+  <div class="tradingview-widget-container" style="height:100%;width:100%">
+    <div class="tradingview-widget-container__widget" style="height:calc(100% - 28px);width:100%"></div>
+    <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/BTCUSD/" rel="noopener nofollow" target="_blank"><span>BTCUSD chart</span></a> by TradingView</div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+    {
+      "autosize": true,
+      "symbol": "BITSTAMP:BTCUSD",
+      "interval": "D",
+      "timezone": "Asia/Tokyo",
+      "theme": "dark",
+      "backgroundColor": "rgba(7, 16, 31, 1)",
+      "gridColor": "rgba(148, 163, 184, 0.08)",
+      "style": "1",
+      "locale": "ja",
+      "allow_symbol_change": true,
+      "hide_side_toolbar": false,
+      "hide_top_toolbar": false,
+      "hide_legend": false,
+      "hide_volume": false,
+      "withdateranges": true,
+      "save_image": false,
+      "calendar": false,
+      "support_host": "https://www.tradingview.com"
+    }
+    </script>
+  </div>
+</div>
+<div class="tradingview-fallback" id="tradingviewFallback"><span>チャートが表示されない場合</span><a href="https://www.tradingview.com/chart/?symbol=BITSTAMP%3ABTCUSD" target="_blank" rel="noopener noreferrer">TradingViewでBTC/USDを開く ↗</a></div>
+</section>
 
 </main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html"><span>⌂</span><small>ホーム</small></a><a href="market.html" class="active"><span>📈</span><small>相場</small></a><a href="portfolio.html"><span>💼</span><small>資産</small></a><a href="news.html"><span>📰</span><small>情報</small></a><a href="settings.html"><span>⚙️</span><small>設定</small></a></nav>
-<script src="cycle1070.js?v=11.9"></script><script src="script.js?v=11.9"></script><script src="home-market-loader.js?v=11.9"></script><script src="market-tools.js?v=11.9"></script><script src="app-shell.js"></script></body></html>
+<script src="cycle1070.js?v=12.0"></script><script src="script.js?v=12.0"></script><script src="home-market-loader.js?v=12.0"></script><script src="market-tools.js?v=12.0"></script><script src="app-shell.js"></script></body></html>
