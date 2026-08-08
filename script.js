@@ -383,14 +383,18 @@ async function refreshMarketDashboard() {
 document.addEventListener(
     "DOMContentLoaded",
     () => {
-        refreshMarketDashboard();
+        update1070Theory();
+        updateHalvingCountdown();
         initializeTradingView();
 
-        // 5分ごとに再取得
-        setInterval(
-            refreshMarketDashboard,
-            5 * 60 * 1000
-        );
+        // v11.9: BTC/Fear & Greed はタイムアウト・フォールバック付き共通ローダーへ一本化。
+        if (window.Bitcoin1070HomeMarket?.load) {
+            window.Bitcoin1070HomeMarket.load();
+            setInterval(() => window.Bitcoin1070HomeMarket.load(), 5 * 60 * 1000);
+        } else {
+            refreshMarketDashboard();
+            setInterval(refreshMarketDashboard, 5 * 60 * 1000);
+        }
     }
 );
 // ===============================

@@ -2,10 +2,43 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>相場分析 | Bitcoin1070 PRO v11.8</title><link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://s3.tradingview.com/tv.js"></script></head><body><header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v11.8</span></div><h1>📈 相場分析</h1><p>BTC指標とTradingViewを専用画面で表示</p></header><main class="container app-page">
-<section class="grid compact-grid"><div class="card"><div class="title">BTC価格</div><div class="big" id="btcPrice">取得中...</div><div class="small">24時間 <span id="btcChange">--</span></div></div><div class="card"><div class="title">Fear & Greed</div><div class="big" id="fear">取得中...</div></div></section>
-<section class="card"><div class="title">🤖 AIマーケット分析</div><div class="ai" id="aiComment">分析中...</div></section>
-<section class="grid"><div class="card"><div class="title">1070日サイクル</div><div class="big" id="days">--</div><div class="small">現在のサイクル位置</div><div class="theory-details"><span id="theoryPhase">局面を判定中...</span><span id="theoryTarget">次の重要時期を計算中...</span></div><div class="progress"><div class="progress-bar" id="progressBar"></div><a class="inline-card-link" href="cycle1070.html">詳しいサイクル画面 →</a></div></div><div class="card"><div class="title">半減期カウント</div><div class="big" id="halving">--</div><div class="small">次回半減期まで</div></div></section>
-<section class="card"><div class="section-heading"><div><h2>📊 TradingView</h2><p class="small">タップ・ピンチ操作で拡大できます</p></div><a class="mini-link" href="analysis.html">保有銘柄分析 →</a></div><div id="tradingview" class="tradingview-frame"></div></section>
-</main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html" class=""><span>⌂</span><small>ホーム</small></a><a href="market.html" class="active"><span>📈</span><small>相場</small></a><a href="portfolio.html" class=""><span>💼</span><small>資産</small></a><a href="news.html" class=""><span>📰</span><small>情報</small></a><a href="settings.html" class=""><span>⚙️</span><small>設定</small></a></nav><script src="cycle1070.js"></script><script src="script.js"></script><script src="app-shell.js"></script></body></html>
+<title>相場分析 | Bitcoin1070 PRO v11.9</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://s3.tradingview.com/tv.js"></script></head><body>
+<header class="app-header market-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v11.9</span></div><h1>📈 相場分析</h1><p>BTCの現在地・1070日サイクル・判断材料を1画面で確認</p></header>
+<main class="container app-page market-page-v119">
+
+<section class="market-toolbar card">
+  <div><span id="marketConnectionStatus" class="market-connection-status">● 市場データ確認中</span><small id="marketUpdatedAt">更新時刻 --:--</small></div>
+  <button type="button" id="marketRefreshButton" class="market-refresh-btn">↻ 最新に更新</button>
+</section>
+
+<section class="market-metric-grid">
+  <article class="card market-metric-card btc"><span class="market-label">BTC PRICE</span><div class="big" id="btcPrice">取得中...</div><div class="market-subline">24時間 <strong id="btcChange">--</strong></div></article>
+  <article class="card market-metric-card fear"><span class="market-label">FEAR & GREED</span><div class="big" id="fear">取得中...</div><div class="market-subline">市場心理を確認</div></article>
+</section>
+
+<section class="card market-ai-card"><div class="section-heading-row"><div><span class="eyebrow">MARKET VIEW</span><h2>🤖 AIマーケット分析</h2></div><a class="compact-edit-link" href="cycle1070.html">1070日詳細 →</a></div><div class="ai market-ai-text" id="aiComment">分析中...</div></section>
+
+<section class="market-cycle-grid">
+  <article class="card market-cycle-card"><span class="market-label">1070 DAY CYCLE</span><div class="market-cycle-main"><strong id="days">--</strong><span>現在地</span></div><div class="theory-details"><span id="theoryPhase">局面を判定中...</span><span id="theoryTarget">次の重要時期を計算中...</span></div><div class="progress"><div class="progress-bar" id="progressBar"></div></div><a class="inline-card-link" href="cycle1070.html">実BTCチャート＋未来シナリオを見る →</a></article>
+  <article class="card market-halving-card"><span class="market-label">NEXT HALVING</span><div class="big" id="halving">--</div><p class="small">次回半減期まで</p><a class="inline-card-link" href="cycle1070.html">半減期ロードマップ →</a></article>
+</section>
+
+<section class="card market-quick-card"><div class="section-heading-row"><div><span class="eyebrow">QUICK ACTIONS</span><h2>⚡ 便利機能</h2></div></div><div class="market-quick-grid">
+  <a href="cycle1070.html"><span>⏳</span><strong>1070日予測</strong><small>底・半減期・ピーク</small></a>
+  <a href="analysis.html"><span>🧠</span><strong>保有銘柄分析</strong><small>テクニカル評価</small></a>
+  <a href="future-simulator.html"><span>🔮</span><strong>未来予測</strong><small>弱気・標準・強気</small></a>
+  <a href="portfolio.html"><span>💼</span><strong>資産確認</strong><small>損益・構成</small></a>
+</div></section>
+
+<section class="card btc-target-card"><div class="section-heading-row"><div><span class="eyebrow">BTC TARGET</span><h2>🎯 BTC目標価格メモ</h2></div><small>端末内に自動保存</small></div><p class="small">買いたい価格・利確したい価格を入れると、現在価格から何％離れているか自動計算します。</p><div class="target-input-grid">
+<label><span>買い目標</span><div class="input-with-unit"><input id="btcBuyTarget" type="number" inputmode="numeric" min="0" step="10000" placeholder="例 7000000"><b>円</b></div><small id="btcBuyDistance">BTC価格取得後に距離を表示します</small></label>
+<label><span>利確目標</span><div class="input-with-unit"><input id="btcSellTarget" type="number" inputmode="numeric" min="0" step="10000" placeholder="例 20000000"><b>円</b></div><small id="btcSellDistance">BTC価格取得後に距離を表示します</small></label>
+</div></section>
+
+<section class="card market-memo-card"><div class="section-heading-row"><div><span class="eyebrow">MY MARKET NOTE</span><h2>📝 相場メモ</h2></div><button type="button" id="clearMarketMemo" class="text-button">消去</button></div><textarea id="marketMemo" rows="4" placeholder="例：BTCが○○円まで下がったら1回目の買い。2026年底候補は分割で入る。"></textarea><p class="small">この端末だけに保存されます。</p></section>
+
+<section class="card"><div class="section-heading"><div><h2>📊 TradingView</h2><p class="small">BTC/USDチャート。タップ・ピンチで拡大できます。</p></div><a class="mini-link" href="analysis.html">銘柄分析 →</a></div><div id="tradingview" class="tradingview-frame"></div></section>
+
+</main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html"><span>⌂</span><small>ホーム</small></a><a href="market.html" class="active"><span>📈</span><small>相場</small></a><a href="portfolio.html"><span>💼</span><small>資産</small></a><a href="news.html"><span>📰</span><small>情報</small></a><a href="settings.html"><span>⚙️</span><small>設定</small></a></nav>
+<script src="cycle1070.js?v=11.9"></script><script src="script.js?v=11.9"></script><script src="home-market-loader.js?v=11.9"></script><script src="market-tools.js?v=11.9"></script><script src="app-shell.js"></script></body></html>

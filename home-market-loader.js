@@ -1,9 +1,9 @@
-// Bitcoin1070 PRO v11.8 - Home market loader
+// Bitcoin1070 PRO v11.9 - shared market loader
 (() => {
   'use strict';
 
   const API = 'https://bitcoin1070-api.531unchi.workers.dev';
-  const CACHE_KEY = 'bitcoin1070_home_market_v11_8';
+  const CACHE_KEY = 'bitcoin1070_home_market_v11_9';
   const $ = id => document.getElementById(id);
   const yen = value => `¥${Math.round(Number(value) || 0).toLocaleString('ja-JP')}`;
   const pct = value => `${Number(value) > 0 ? '+' : ''}${Number(value || 0).toFixed(2)}%`;
@@ -109,6 +109,13 @@
     throw new Error('Fear unavailable');
   }
 
+  function renderUpdatedAt(cached = false) {
+    const el = $('marketUpdatedAt');
+    if (!el) return;
+    const now = new Date();
+    el.textContent = `${cached ? '保存値 ' : ''}${now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})} 更新`;
+  }
+
   async function load() {
     const priceEl = $('btcPrice');
     const fearEl = $('fear');
@@ -118,6 +125,7 @@
     const cache = readCache();
     if (cache?.btc?.price > 0) renderBTC(cache.btc.price, cache.btc.change || 0, true);
     if (Number.isFinite(Number(cache?.fear?.value))) renderFear(Number(cache.fear.value), cache.fear.label || '保存値', true);
+    if (cache?.btc?.price > 0 || Number.isFinite(Number(cache?.fear?.value))) renderUpdatedAt(true);
 
     const hardStop = setTimeout(() => {
       if (priceEl && /取得中/.test(priceEl.textContent || '')) priceEl.textContent = '取得失敗';
@@ -148,12 +156,19 @@
       failed: !effectiveBTC && !effectiveFear
     });
 
-    if (btc || fear) writeCache({ btc: btc || cache?.btc || null, fear: fear || cache?.fear || null });
+    if (btc || fear) {
+      writeCache({ btc: btc || cache?.btc || null, fear: fear || cache?.fear || null });
+      renderUpdatedAt(false);
+    } else if (cache) {
+      renderUpdatedAt(true);
+    }
+
+    window.dispatchEvent(new CustomEvent('b1070:market-updated', { detail: { btc: effectiveBTC, fear: effectiveFear } }));
   }
 
   window.Bitcoin1070HomeMarket = { load };
   document.addEventListener('click', event => {
-    if (event.target?.id === 'homeRefreshAsset' || event.target?.closest?.('#homeRefreshAsset')) {
+    if (event.target?.id === 'homeRefreshAsset' || event.target?.closest?.('#homeRefreshAsset') || event.target?.id === 'marketRefreshButton' || event.target?.closest?.('#marketRefreshButton')) {
       setTimeout(load, 200);
     }
   });

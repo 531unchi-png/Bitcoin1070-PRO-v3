@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v11.8 - BTC 実チャート延長 × 半減期 × 1070日理論
+// Bitcoin1070 PRO v11.9 - BTC 実チャート延長 × 半減期 × 1070日理論
 (() => {
   'use strict';
 
