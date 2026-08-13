@@ -120,3 +120,17 @@ function resetAppStorage() {
     localStorage.removeItem(STORAGE_KEYS.ASSETS);
     localStorage.removeItem(STORAGE_KEYS.HISTORY);
 }
+
+// v12.1: 日本円（現金）残高。銘柄データとは分離し、既存資産との互換性を維持。
+const CASH_STORAGE_KEY = "bitcoin1070_v12_1_cash_jpy";
+function loadCashBalance() {
+    try {
+        const value = Number(localStorage.getItem(CASH_STORAGE_KEY) || 0);
+        return Number.isFinite(value) && value >= 0 ? value : 0;
+    } catch (_) { return 0; }
+}
+function saveCashBalance(value) {
+    const normalized = Math.max(0, Number(value) || 0);
+    localStorage.setItem(CASH_STORAGE_KEY, String(normalized));
+    return normalized;
+}

@@ -1122,3 +1122,9 @@ html { scroll-behavior: smooth; }
 
 /* v12.0 TradingView Advanced Chart */
 .tradingview-card{overflow:hidden}.tradingview-widget-shell{height:620px;min-height:520px;margin-top:12px;border-radius:16px;overflow:hidden;background:#07101f;border:1px solid rgba(148,163,184,.14)}.tradingview-widget-container{height:100%;width:100%}.tradingview-widget-container__widget{height:calc(100% - 28px)!important;width:100%}.tradingview-widget-copyright{height:28px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;color:#8793a8;background:#07101f}.tradingview-widget-copyright a{color:#ffad3e;text-decoration:none}.tradingview-fallback{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);font-size:.8rem}.tradingview-fallback a{color:#ffad3e;font-weight:800;text-decoration:none}@media(max-width:640px){.tradingview-widget-shell{height:570px;min-height:500px}.tradingview-fallback{align-items:flex-start;flex-direction:column}}
+
+/* v12.1 日本円資産 */
+.cash-category { border-color: rgba(245, 138, 10, .28); }
+.cash-editor-card { border-color: rgba(245, 138, 10, .32); }
+.cash-editor-card label { display:block; margin-top:16px; }
+.cash-editor-card input { width:100%; margin-top:8px; }

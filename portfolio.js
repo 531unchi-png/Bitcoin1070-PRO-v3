@@ -141,6 +141,10 @@ function getTypeLabel(type) {
         return "🇺🇸 米国株";
     }
 
+    if (type === "cash") {
+        return "💴 日本円";
+    }
+
     return "🇯🇵 日本株";
 }
 
@@ -295,15 +299,16 @@ function evaluateAssets() {
 // =====================================
 
 function renderTotalAsset(evaluations) {
+    const cashBalance = typeof loadCashBalance === "function" ? loadCashBalance() : 0;
     const total = evaluations.reduce(
         (sum, asset) => sum + asset.marketValueJpy,
-        0
+        cashBalance
     );
 
     const totalCost = evaluations.reduce(
         (sum, asset) =>
             sum + asset.acquisitionValueJpy,
-        0
+        cashBalance
     );
 
     const totalProfit = total - totalCost;
@@ -325,7 +330,7 @@ function renderTotalAsset(evaluations) {
 
     if (commentElement) {
         commentElement.innerHTML = `
-            仮想通貨・日本株・米国株 合計<br>
+            仮想通貨・日本株・米国株・日本円 合計<br>
             <span class="${getProfitClass(totalProfit)}">
                 損益：
                 ${totalProfit >= 0 ? "+" : ""}
@@ -442,6 +447,11 @@ function renderPortfolio(evaluations) {
     ];
 
     let html = "";
+
+    const cashBalance = typeof loadCashBalance === "function" ? loadCashBalance() : 0;
+    if (cashBalance > 0) {
+        html += `<section class="portfolio-section asset-anchor-section" id="assets-cash"><div class="portfolio-section-heading"><h3>💴 日本円</h3><a href="#assetCategories" class="back-to-categories">ジャンルへ戻る ↑</a></div><div class="asset-card-list"><div class="asset-card"><div class="asset-card-header"><div><strong>日本円</strong><span class="asset-symbol">JPY</span></div><span class="asset-type">💴 現金</span></div><div class="asset-row"><span>保有残高</span><strong>${formatYen(cashBalance)}</strong></div><div class="asset-row"><span>評価額</span><strong>${formatYen(cashBalance)}</strong></div><div class="asset-row"><span>価格変動</span><strong class="profit-neutral">なし</strong></div></div></div></section>`;
+    }
 
     groups.forEach(group => {
         const groupAssets = evaluations.filter(

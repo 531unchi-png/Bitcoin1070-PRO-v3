@@ -131,7 +131,8 @@ function calculateCategoryTotals(
         crypto: 0,
         jp: 0,
         us: 0,
-        total: 0
+        cash: (typeof loadCashBalance === "function" ? loadCashBalance() : 0),
+        total: (typeof loadCashBalance === "function" ? loadCashBalance() : 0)
     };
 
     evaluations.forEach(asset => {
@@ -186,6 +187,8 @@ function renderCategoryTotals(
             "usStockTotal"
         );
 
+    const cashElement = document.getElementById("cashTotal");
+
     if (cryptoElement) {
         cryptoElement.textContent =
             formatYen(
@@ -201,10 +204,10 @@ function renderCategoryTotals(
     }
 
     if (usElement) {
-        usElement.textContent =
-            formatYen(
-                totals.us
-            );
+        usElement.textContent = formatYen(totals.us);
+    }
+    if (cashElement) {
+        cashElement.textContent = formatYen(totals.cash);
     }
 }
 
@@ -256,7 +259,8 @@ function drawCategoryChart(
     const labels = [
         "仮想通貨",
         "日本株",
-        "米国株"
+        "米国株",
+        "日本円"
     ];
 
     const values = [
@@ -266,9 +270,8 @@ function drawCategoryChart(
         Math.round(
             totals.jp
         ),
-        Math.round(
-            totals.us
-        )
+        Math.round(totals.us),
+        Math.round(totals.cash)
     ];
 
     const total =
@@ -388,6 +391,8 @@ function recordDailyAssetTotal(
             Math.round(
                 totals.us
             ),
+
+        cash: Math.round(totals.cash),
 
         updatedAt:
             new Date()
