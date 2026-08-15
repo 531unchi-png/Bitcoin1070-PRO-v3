@@ -1,136 +1,18 @@
-// =====================================
-// Storage Manager v3.0
-// =====================================
-
-const STORAGE_KEYS = {
-    ASSETS: "bitcoin1070_v3_assets",
-    HISTORY: "bitcoin1070_v3_history"
-};
-
-function saveAssetsToStorage(assets) {
-    localStorage.setItem(
-        STORAGE_KEYS.ASSETS,
-        JSON.stringify(assets)
-    );
-}
-
-function loadAssetsFromStorage(defaultAssets) {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEYS.ASSETS);
-
-        if (!saved) {
-            return structuredClone(defaultAssets);
-        }
-
-        const parsed = JSON.parse(saved);
-
-        if (!Array.isArray(parsed)) {
-            return structuredClone(defaultAssets);
-        }
-
-        return parsed;
-    } catch (error) {
-        console.error("資産データ読込エラー:", error);
-        return structuredClone(defaultAssets);
-    }
-}
-
-function saveHistoryToStorage(history) {
-    localStorage.setItem(
-        STORAGE_KEYS.HISTORY,
-        JSON.stringify(history)
-    );
-}
-
-function loadHistoryFromStorage() {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEYS.HISTORY);
-
-        if (!saved) {
-            return [];
-        }
-
-        const parsed = JSON.parse(saved);
-
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.error("履歴読込エラー:", error);
-        return [];
-    }
-}
-
-function exportAppData(assets, history) {
-    const backup = {
-        version: "3.0",
-        exportedAt: new Date().toISOString(),
-        assets,
-        history
-    };
-
-    const blob = new Blob(
-        [JSON.stringify(backup, null, 2)],
-        { type: "application/json" }
-    );
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `bitcoin1070-backup-${Date.now()}.json`;
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(url);
-}
-
-function importAppData(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            try {
-                const data = JSON.parse(reader.result);
-
-                if (!Array.isArray(data.assets)) {
-                    throw new Error("資産データの形式が不正です");
-                }
-
-                resolve({
-                    assets: data.assets,
-                    history: Array.isArray(data.history)
-                        ? data.history
-                        : []
-                });
-            } catch (error) {
-                reject(error);
-            }
-        };
-
-        reader.onerror = () => {
-            reject(new Error("ファイルの読み込みに失敗しました"));
-        };
-
-        reader.readAsText(file);
-    });
-}
-
-function resetAppStorage() {
-    localStorage.removeItem(STORAGE_KEYS.ASSETS);
-    localStorage.removeItem(STORAGE_KEYS.HISTORY);
-}
-
-// v12.1: 日本円（現金）残高。銘柄データとは分離し、既存資産との互換性を維持。
-const CASH_STORAGE_KEY = "bitcoin1070_v12_1_cash_jpy";
-function loadCashBalance() {
-    try {
-        const value = Number(localStorage.getItem(CASH_STORAGE_KEY) || 0);
-        return Number.isFinite(value) && value >= 0 ? value : 0;
-    } catch (_) { return 0; }
-}
-function saveCashBalance(value) {
-    const normalized = Math.max(0, Number(value) || 0);
-    localStorage.setItem(CASH_STORAGE_KEY, String(normalized));
-    return normalized;
-}
+// Bitcoin1070 PRO v12.2 - Storage Manager (backward compatible / validated restore)
+const STORAGE_KEYS={ASSETS:"bitcoin1070_v3_assets",HISTORY:"bitcoin1070_v3_history"};
+const CASH_STORAGE_KEY="bitcoin1070_v12_1_cash_jpy";
+const BACKUP_SCHEMA_VERSION=4;
+function cloneValue(v){return typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));}
+function saveAssetsToStorage(assets){localStorage.setItem(STORAGE_KEYS.ASSETS,JSON.stringify(assets));}
+function loadAssetsFromStorage(defaultAssets){try{const saved=localStorage.getItem(STORAGE_KEYS.ASSETS);if(!saved)return cloneValue(defaultAssets);const parsed=JSON.parse(saved);return Array.isArray(parsed)?parsed:cloneValue(defaultAssets);}catch(e){console.error("資産データ読込エラー:",e);return cloneValue(defaultAssets);}}
+function saveHistoryToStorage(history){localStorage.setItem(STORAGE_KEYS.HISTORY,JSON.stringify(history));}
+function loadHistoryFromStorage(){try{const saved=localStorage.getItem(STORAGE_KEYS.HISTORY);if(!saved)return[];const parsed=JSON.parse(saved);return Array.isArray(parsed)?parsed:[];}catch(e){console.error("履歴読込エラー:",e);return[];}}
+function loadCashBalance(){try{const v=Number(localStorage.getItem(CASH_STORAGE_KEY)||0);return Number.isFinite(v)&&v>=0?v:0;}catch(_){return 0;}}
+function saveCashBalance(value){const n=Number(value);if(!Number.isFinite(n)||n<0)throw new Error("日本円残高が不正です");localStorage.setItem(CASH_STORAGE_KEY,String(n));return n;}
+function safeString(value,name,max=120){if(typeof value!=="string"||!value.trim()||/[\u0000-\u001F\u007F]/.test(value)||value.length>max)throw new Error(`${name}が不正です`);return value;}
+function safeNumber(value,name,{nullable=false}={}){if(nullable&&(value===null||value===undefined||value===""))return null;if(typeof value==="boolean"||value===null||value===undefined||value==="")throw new Error(`${name}が不正です`);const n=Number(value);if(!Number.isFinite(n)||n<0)throw new Error(`${name}が不正です`);return n;}
+function sanitizeAsset(asset){if(!asset||typeof asset!=="object")throw new Error("資産データが不正です");const type=safeString(asset.type,"type",20);if(!["crypto","jp","us"].includes(type))throw new Error("資産typeが不正です");const out={type,name:safeString(asset.name,"name",120),symbol:safeString(asset.symbol,"symbol",40),amount:safeNumber(asset.amount,"amount"),cost:safeNumber(asset.cost,"cost",{nullable:true})};if(asset.coinGeckoId!=null&&asset.coinGeckoId!=="")out.coinGeckoId=safeString(asset.coinGeckoId,"coinGeckoId",120);if(asset.yahooSymbol!=null&&asset.yahooSymbol!=="")out.yahooSymbol=safeString(asset.yahooSymbol,"yahooSymbol",80);if(asset.costJpy!=null&&asset.costJpy!=="")out.costJpy=safeNumber(asset.costJpy,"costJpy");if(asset.acquisitionUsdJpy!=null&&asset.acquisitionUsdJpy!=="")out.acquisitionUsdJpy=safeNumber(asset.acquisitionUsdJpy,"acquisitionUsdJpy");return out;}
+function sanitizeHistory(history){if(!Array.isArray(history))return[];return history.slice(0,5000).map((h,i)=>{if(!h||typeof h!=="object")throw new Error(`履歴${i+1}が不正です`);const out={};if(h.id!=null)out.id=safeNumber(h.id,"history.id");if(h.date!=null)out.date=safeString(h.date,"history.date",80);if(h.action!=null)out.action=safeString(h.action,"history.action",500);return out;});}
+function exportAppData(assets,history){const backup={schemaVersion:BACKUP_SCHEMA_VERSION,version:"12.2",exportedAt:new Date().toISOString(),cashBalance:loadCashBalance(),assets,history};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=`bitcoin1070-backup-${Date.now()}.json`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);}
+function importAppData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);const schema=data.schemaVersion;if(schema!==undefined&&schema!==BACKUP_SCHEMA_VERSION)throw new Error(`未対応のバックアップ形式です (schemaVersion: ${schema})`);if(!Array.isArray(data.assets))throw new Error("資産データの形式が不正です");const assets=data.assets.map(sanitizeAsset),history=sanitizeHistory(data.history);let cashBalance=null;if(schema===BACKUP_SCHEMA_VERSION){cashBalance=safeNumber(data.cashBalance,"cashBalance");}else if(data.cashBalance!=null){cashBalance=safeNumber(data.cashBalance,"cashBalance");}resolve({assets,history,cashBalance});}catch(e){reject(e);}};reader.onerror=()=>reject(new Error("ファイルの読み込みに失敗しました"));reader.readAsText(file);});}
+function resetAppStorage(){localStorage.removeItem(STORAGE_KEYS.ASSETS);localStorage.removeItem(STORAGE_KEYS.HISTORY);}

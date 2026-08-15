@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v11.2 - AI未来資産シミュレーター
+// Bitcoin1070 PRO v12.2 - AI未来資産シミュレーター
 (() => {
   'use strict';
   const YEARS = [5, 10, 15, 20, 25, 30];

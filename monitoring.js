@@ -81,7 +81,7 @@ function renderMonitoringDashboard() {
         return `
             <div class="watch-item ${favorite ? "favorite" : ""}">
                 <div class="watch-header">
-                    <button type="button" class="star-button" onclick="toggleFavorite('${monitoringEscape(asset.symbol)}')" aria-label="お気に入り切替">${favorite ? "⭐" : "☆"}</button>
+                    <button type="button" class="star-button" data-monitor-action="favorite" data-symbol="${monitoringEscape(asset.symbol)}" aria-label="お気に入り切替">${favorite ? "⭐" : "☆"}</button>
                     <div><strong>${monitoringEscape(asset.name)}</strong><span>${monitoringEscape(asset.symbol)}</span></div>
                     <strong>${formatYen(asset.currentPriceJpy)}</strong>
                 </div>
@@ -97,12 +97,20 @@ function renderMonitoringDashboard() {
                         <label>下がったら通知<input data-alert-below="${monitoringEscape(asset.symbol)}" type="number" inputmode="decimal" value="${setting.below || ""}" placeholder="円"></label>
                     </div>
                     <div class="alert-actions">
-                        <button type="button" onclick="savePriceAlert('${monitoringEscape(asset.symbol)}')">保存</button>
-                        <button type="button" class="secondary-button" onclick="clearPriceAlert('${monitoringEscape(asset.symbol)}')">解除</button>
+                        <button type="button" data-monitor-action="save" data-symbol="${monitoringEscape(asset.symbol)}">保存</button>
+                        <button type="button" class="secondary-button" data-monitor-action="clear" data-symbol="${monitoringEscape(asset.symbol)}">解除</button>
                     </div>
                 </details>
             </div>`;
     }).join("");
+    container.querySelectorAll("[data-monitor-action]").forEach(button => {
+        button.addEventListener("click", event => {
+            const target=event.currentTarget, symbol=target.dataset.symbol, action=target.dataset.monitorAction;
+            if(action==="favorite") toggleFavorite(symbol);
+            else if(action==="save") savePriceAlert(symbol);
+            else if(action==="clear") clearPriceAlert(symbol);
+        });
+    });
 }
 
 function updateMonitoringDashboard(evaluations) {

@@ -1,0 +1,22 @@
+Bitcoin1070 PRO v12.2 validation
+Base: v12.1 complete package / f5c1fb590c58e8beebb0f0f5ef0908ba1eaa338c
+
+PASS: JavaScript syntax check for all runtime .js files
+PASS: local HTML src/href references resolve
+PASS: manifest JSON valid and name = Bitcoin1070 PRO v12.2
+PASS: icon-192.png = 192x192 PNG
+PASS: icon-512.png = 512x512 PNG
+PASS: Service Worker cache = bitcoin1070-pro-v12-2-build1
+PASS: Service Worker entries unique and local files exist
+PASS: monitoring.js contains no inline onclick=
+PASS: hard-coded stock fallback constants removed from current valuation path
+PASS: portfolio total profit excludes assets with unknown acquisition cost
+PASS: portfolio user-controlled name/symbol HTML escaping added
+PASS: backup schema v4 + legacy backup compatibility implemented
+PASS: existing localStorage asset/history/cash keys preserved
+PASS: cycle1070.js retains real BTC history endpoint mode=btc-cycle
+PASS: future-simulator.js retains full catalog/market-price retrieval implementation
+
+Limitations:
+- External API connectivity was not executed from this static validation.
+- iPhone Safari/PWA installation was not physically tested.
