@@ -60,14 +60,7 @@ function saveCryptoPrices(prices, fetchedAt) {
 }
 let latestEvaluations = [];
 
-const FALLBACK_STOCK_PRICES = {
-    NVDA: 185,
-    USDJPY: 160,
-    MHI: 3650,
-    ADVT: 11800,
-    FJK: 7200,
-    VRAIN: 3950
-};
+
 
 // =====================================
 // 表示用
@@ -148,6 +141,10 @@ function getTypeLabel(type) {
     return "🇯🇵 日本株";
 }
 
+function escapePortfolioHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
 // =====================================
 // 株価情報
 // stocks.jsのデータがあれば使用
@@ -155,28 +152,9 @@ function getTypeLabel(type) {
 // =====================================
 
 function getStockPriceData() {
-    if (
-        typeof stockPrices !== "undefined" &&
-        stockPrices &&
-        typeof stockPrices === "object"
-    ) {
-        return {
-            ...FALLBACK_STOCK_PRICES,
-            ...stockPrices
-        };
-    }
-
-    if (
-        typeof window.stockPriceData !== "undefined" &&
-        window.stockPriceData
-    ) {
-        return {
-            ...FALLBACK_STOCK_PRICES,
-            ...window.stockPriceData
-        };
-    }
-
-    return { ...FALLBACK_STOCK_PRICES };
+    if (typeof stockPrices !== "undefined" && stockPrices && typeof stockPrices === "object") return { ...stockPrices };
+    if (typeof window.stockPriceData !== "undefined" && window.stockPriceData) return { ...window.stockPriceData };
+    return {};
 }
 
 // =====================================
@@ -228,72 +206,31 @@ async function fetchCryptoPrices() {
 function evaluateAssets() {
     const stocks = getStockPriceData();
     const usdJpy = Number(stocks.USDJPY) || 0;
-
     latestEvaluations = assets.map(asset => {
         const amount = Number(asset.amount) || 0;
-        const cost = Number(asset.cost) || 0;
-
-        let currentPrice = 0;
-        let currentPriceJpy = 0;
-        let acquisitionValueJpy = 0;
-
+        const rawCost = asset.cost;
+        const cost = (rawCost === null || rawCost === undefined || rawCost === "") ? null : Number(rawCost);
+        let currentPrice = 0, currentPriceJpy = 0, acquisitionValueJpy = null;
         if (asset.type === "crypto") {
-            const symbolKey = String(asset.symbol || "").trim().toUpperCase();
-            const idKey = String(asset.coinGeckoId || "").trim().toUpperCase();
-            currentPrice = Number(
-                latestCryptoPrices[symbolKey] ??
-                latestCryptoPrices[idKey]
-            ) || 0;
-
-            currentPriceJpy = currentPrice;
-            acquisitionValueJpy = amount * cost;
+            const symbolKey=String(asset.symbol||"").trim().toUpperCase(), idKey=String(asset.coinGeckoId||"").trim().toUpperCase();
+            currentPrice=Number(latestCryptoPrices[symbolKey] ?? latestCryptoPrices[idKey])||0; currentPriceJpy=currentPrice;
+            if(Number.isFinite(cost) && cost>=0) acquisitionValueJpy=amount*cost;
+        } else if (asset.type === "jp") {
+            currentPrice=Number(stocks[String(asset.symbol||"").trim().toUpperCase()])||0; currentPriceJpy=currentPrice;
+            if(Number.isFinite(cost) && cost>=0) acquisitionValueJpy=amount*cost;
+        } else if (asset.type === "us") {
+            currentPrice=Number(stocks[String(asset.symbol||"").trim().toUpperCase()])||0; currentPriceJpy=(currentPrice>0&&usdJpy>0)?currentPrice*usdJpy:0;
+            const costJpy=Number(asset.costJpy), acquisitionFx=Number(asset.acquisitionUsdJpy);
+            if(Number.isFinite(costJpy)&&costJpy>=0) acquisitionValueJpy=amount*costJpy;
+            else if(Number.isFinite(cost)&&cost>=0&&Number.isFinite(acquisitionFx)&&acquisitionFx>0) acquisitionValueJpy=amount*cost*acquisitionFx;
         }
-
-        if (asset.type === "jp") {
-            currentPrice =
-                Number(stocks[asset.symbol]) || 0;
-
-            currentPriceJpy = currentPrice;
-            acquisitionValueJpy = amount * cost;
-        }
-
-        if (asset.type === "us") {
-            currentPrice =
-                Number(stocks[asset.symbol]) || 0;
-
-            currentPriceJpy = currentPrice * usdJpy;
-            acquisitionValueJpy =
-                amount * cost * usdJpy;
-        }
-
-        const marketValueJpy =
-            amount * currentPriceJpy;
-
-        const profitJpy =
-            marketValueJpy - acquisitionValueJpy;
-
-        const profitRate =
-            acquisitionValueJpy > 0
-                ? (profitJpy / acquisitionValueJpy) * 100
-                : 0;
-
-        return {
-            ...asset,
-            amount,
-            cost,
-            currentPrice,
-            currentPriceJpy,
-            marketValueJpy,
-            acquisitionValueJpy,
-            profitJpy,
-            profitRate,
-            usdJpy
-        };
+        const marketValueJpy=amount*currentPriceJpy;
+        const profitJpy=(acquisitionValueJpy!==null && currentPriceJpy>0)?marketValueJpy-acquisitionValueJpy:null;
+        const profitRate=(profitJpy!==null && acquisitionValueJpy>0)?profitJpy/acquisitionValueJpy*100:null;
+        return {...asset,amount,cost,currentPrice,currentPriceJpy,marketValueJpy,acquisitionValueJpy,profitJpy,profitRate,usdJpy};
     });
-
     return latestEvaluations;
 }
-
 // =====================================
 // 総資産表示
 // =====================================
@@ -305,18 +242,10 @@ function renderTotalAsset(evaluations) {
         cashBalance
     );
 
-    const totalCost = evaluations.reduce(
-        (sum, asset) =>
-            sum + asset.acquisitionValueJpy,
-        cashBalance
-    );
-
-    const totalProfit = total - totalCost;
-
-    const totalProfitRate =
-        totalCost > 0
-            ? (totalProfit / totalCost) * 100
-            : 0;
+    const profitKnown = evaluations.filter(asset => asset.profitJpy !== null);
+    const totalCost = profitKnown.reduce((sum, asset) => sum + Number(asset.acquisitionValueJpy || 0), 0);
+    const totalProfit = profitKnown.reduce((sum, asset) => sum + Number(asset.profitJpy || 0), 0);
+    const totalProfitRate = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
 
     const totalElement =
         document.getElementById("totalAsset");
@@ -352,12 +281,10 @@ function createAssetCard(asset) {
                ／ 約${formatYen(asset.currentPriceJpy)}`
             : formatYen(asset.currentPriceJpy);
 
-    const costText =
-        asset.type === "us"
-            ? `${formatDollar(asset.cost)}
-               ／ 約${formatYen(
-                   asset.cost * asset.usdJpy
-               )}`
+    const costText = asset.acquisitionValueJpy === null
+        ? "取得原価未確定"
+        : asset.type === "us"
+            ? `${formatDollar(asset.cost)} ／ 約${formatYen(asset.amount > 0 ? asset.acquisitionValueJpy / asset.amount : 0)}`
             : formatYen(asset.cost);
 
     return `
@@ -365,9 +292,9 @@ function createAssetCard(asset) {
 
             <div class="asset-card-header">
                 <div>
-                    <strong>${asset.name}</strong>
+                    <strong>${escapePortfolioHtml(asset.name)}</strong>
                     <span class="asset-symbol">
-                        ${asset.symbol}
+                        ${escapePortfolioHtml(asset.symbol)}
                     </span>
                 </div>
 
@@ -381,7 +308,7 @@ function createAssetCard(asset) {
                 <strong>
                     ${formatNumber(asset.amount)}
                     ${asset.type === "crypto"
-                        ? asset.symbol
+                        ? escapePortfolioHtml(asset.symbol)
                         : "株"}
                 </strong>
             </div>
@@ -406,12 +333,8 @@ function createAssetCard(asset) {
             <div class="asset-row">
                 <span>損益</span>
 
-                <strong class="${getProfitClass(
-                    asset.profitJpy
-                )}">
-                    ${asset.profitJpy >= 0 ? "+" : ""}
-                    ${formatYen(asset.profitJpy)}
-                    （${formatPercent(asset.profitRate)}）
+                <strong class="${asset.profitJpy === null ? "profit-neutral" : getProfitClass(asset.profitJpy)}">
+                    ${asset.profitJpy === null ? "取得原価未確定" : `${asset.profitJpy >= 0 ? "+" : ""}${formatYen(asset.profitJpy)}（${formatPercent(asset.profitRate)}）`}
                 </strong>
             </div>
 
@@ -796,6 +719,9 @@ function setupRestoreButton() {
             saveHistoryToStorage(
                 transactionHistory
             );
+            if (restored.cashBalance !== null && restored.cashBalance !== undefined && typeof saveCashBalance === "function") {
+                saveCashBalance(restored.cashBalance);
+            }
 
             await loadMarketData();
 

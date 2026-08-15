@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v11.9 - market convenience tools
+// Bitcoin1070 PRO v12.2 - market convenience tools
 (() => {
   'use strict';
   const KEY = 'bitcoin1070_market_tools_v11_9';

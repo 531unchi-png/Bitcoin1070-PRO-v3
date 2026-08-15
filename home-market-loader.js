@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v11.9 - shared market loader
+// Bitcoin1070 PRO v12.2 - shared market loader
 (() => {
   'use strict';
 
