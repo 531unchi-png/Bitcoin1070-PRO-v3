@@ -220,9 +220,7 @@ function evaluateAssets() {
             if(Number.isFinite(cost) && cost>=0) acquisitionValueJpy=amount*cost;
         } else if (asset.type === "us") {
             currentPrice=Number(stocks[String(asset.symbol||"").trim().toUpperCase()])||0; currentPriceJpy=(currentPrice>0&&usdJpy>0)?currentPrice*usdJpy:0;
-            const costJpy=Number(asset.costJpy), acquisitionFx=Number(asset.acquisitionUsdJpy);
-            if(Number.isFinite(costJpy)&&costJpy>=0) acquisitionValueJpy=amount*costJpy;
-            else if(Number.isFinite(cost)&&cost>=0&&Number.isFinite(acquisitionFx)&&acquisitionFx>0) acquisitionValueJpy=amount*cost*acquisitionFx;
+            acquisitionValueJpy=assetAcquisitionValueJpy(asset);
         }
         const marketValueJpy=amount*currentPriceJpy;
         const profitJpy=(acquisitionValueJpy!==null && currentPriceJpy>0)?marketValueJpy-acquisitionValueJpy:null;

@@ -1,5 +1,5 @@
 // Bitcoin1070 PRO Service Worker v13.0
-const CACHE_NAME='bitcoin1070-pro-v13-0-build1';
+const CACHE_NAME='bitcoin1070-pro-v13-0-build2';
 const APP_FILES=[
  './','./index.html','./guide.html','./privacy.html','./doubling-navi.html','./future-simulator.html','./market.html','./portfolio.html','./portfolio-edit.html','./transactions.html','./analysis.html','./news.html','./settings.html','./cycle1070.html',
  './style.css?v=13.0','./market-tools.js?v=13.0','./home-market-loader.js?v=13.0','./doubling-navi.js?v=13.0','./future-simulator.js?v=13.0','./app-shell.js?v=13.0','./asset-master.js?v=13.0','./asset-search.js?v=13.0','./asset-editor-page.js?v=13.0','./transactions.js?v=13.0','./cycle1070.js?v=13.0','./score1070.js?v=13.0','./news-center.js?v=13.0','./storage.js?v=13.0','./stocks.js?v=13.0','./chart.js?v=13.0','./portfolio.js?v=13.0','./editor.js?v=13.0','./analytics.js?v=13.0','./technical.js?v=13.0','./monitoring.js?v=13.0','./script.js?v=13.0','./manifest.json','./icon-192.png','./icon-512.png'

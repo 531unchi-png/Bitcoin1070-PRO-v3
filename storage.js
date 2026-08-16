@@ -35,6 +35,15 @@ function sanitizeTransaction(item,index=0){
 function loadTransactionsFromStorage(){try{const raw=localStorage.getItem(activeStorageKey(STORAGE_KEYS.TRANSACTIONS));if(!raw)return[];const data=JSON.parse(raw);return Array.isArray(data)?data.map(sanitizeTransaction):[];}catch(e){console.error("取引台帳読込エラー:",e);return[];}}
 function saveTransactionsToStorage(items){const clean=items.slice(0,5000).map(sanitizeTransaction);localStorage.setItem(activeStorageKey(STORAGE_KEYS.TRANSACTIONS),JSON.stringify(clean));return clean;}
 function assetUnitCostJpy(asset){if(asset.cost===null||asset.cost===undefined||asset.cost==="")return null;if(asset.type==="us"){const jpy=Number(asset.costJpy);if(Number.isFinite(jpy))return jpy;const fx=Number(asset.acquisitionUsdJpy);return Number.isFinite(fx)&&fx>0?Number(asset.cost)*fx:null;}return Number(asset.cost);}
+function assetAcquisitionValueJpy(asset){const unitCost=assetUnitCostJpy(asset),amount=Number(asset?.amount);return unitCost===null||!Number.isFinite(amount)?null:unitCost*amount;}
+function setUsAssetAcquisitionFx(asset,value){
+  if(!asset||asset.type!=="us")return asset;
+  if(value===null||value===undefined||value===""){delete asset.acquisitionUsdJpy;delete asset.costJpy;return asset;}
+  const fx=safeNumber(value,"取得時USD/JPY",{positive:true}),cost=safeNumber(asset.cost,"平均取得単価",{nullable:true});
+  asset.acquisitionUsdJpy=fx;
+  if(cost===null)delete asset.costJpy;else asset.costJpy=cost*fx;
+  return asset;
+}
 function createLedgerEntry(input,currentCash){
   const kind=safeString(input.kind,"種別",20),date=new Date(input.date).toISOString(),id=`${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
   if(!["BUY","SELL","DEPOSIT","WITHDRAWAL"].includes(kind)||!Number.isFinite(Date.parse(date)))throw new Error("取引内容が不正です");
