@@ -1,6 +1,6 @@
 // Bitcoin1070 PRO v10.1 - かな／銘柄名／シンボル 横断検索マスタ
 window.B1070_ASSET_MASTER = [
-  {type:'crypto',symbol:'BTC',name:'Bitcoin',coinGeckoId:'bitcoin',keywords:['ビットコイン']},
+  {type:'crypto',symbol:'BTC',name:'Bitcoin',reading:'びっとこいん',coinGeckoId:'bitcoin',keywords:['ビットコイン','びっと']},
   {type:'crypto',symbol:'ETH',name:'Ethereum',coinGeckoId:'ethereum',keywords:['イーサリアム']},
   {type:'crypto',symbol:'XRP',name:'XRP',coinGeckoId:'ripple',keywords:['リップル']},
   {type:'crypto',symbol:'SOL',name:'Solana',coinGeckoId:'solana',keywords:['ソラナ']},
@@ -10,6 +10,10 @@ window.B1070_ASSET_MASTER = [
   {type:'crypto',symbol:'SHIB',name:'Shiba Inu',coinGeckoId:'shiba-inu',keywords:['シバイヌ']},
 
   {type:'jp',symbol:'285A',name:'キオクシアホールディングス',reading:'きおくしあほーるでぃんぐす',yahooSymbol:'285A.T',keywords:['キオクシア','KIOXIA','キオクシアHD']},
+  {type:'jp',symbol:'2809',name:'キユーピー',reading:'きゆーぴー',yahooSymbol:'2809.T',keywords:['キューピー']},
+  {type:'jp',symbol:'2801',name:'キッコーマン',reading:'きっこーまん',yahooSymbol:'2801.T',keywords:[]},
+  {type:'jp',symbol:'2503',name:'キリンホールディングス',reading:'きりんほーるでぃんぐす',yahooSymbol:'2503.T',keywords:['キリンHD']},
+  {type:'jp',symbol:'6861',name:'キーエンス',reading:'きーえんす',yahooSymbol:'6861.T',keywords:[]},
   {type:'jp',symbol:'3556',name:'リネットジャパングループ',reading:'りねっとじゃぱんぐるーぷ',yahooSymbol:'3556.T',keywords:['リネットジャパン','リネット']},
   {type:'jp',symbol:'1605',name:'INPEX',reading:'いんぺっくす',yahooSymbol:'1605.T',keywords:['インペックス']},
   {type:'jp',symbol:'7011',name:'三菱重工業',reading:'みつびしじゅうこうぎょう',yahooSymbol:'7011.T',keywords:['三菱重工']},

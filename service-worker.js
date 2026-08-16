@@ -1,8 +1,8 @@
-// Bitcoin1070 PRO Service Worker v12.3
-const CACHE_NAME='bitcoin1070-pro-v12-3-build1';
+// Bitcoin1070 PRO Service Worker v12.4
+const CACHE_NAME='bitcoin1070-pro-v12-4-build1';
 const APP_FILES=[
  './','./index.html','./doubling-navi.html','./future-simulator.html','./market.html','./portfolio.html','./portfolio-edit.html','./transactions.html','./analysis.html','./news.html','./settings.html','./cycle1070.html',
- './style.css?v=12.3','./market-tools.js?v=12.3','./home-market-loader.js?v=12.3','./doubling-navi.js?v=12.3','./future-simulator.js?v=12.3','./app-shell.js?v=12.3','./asset-master.js?v=12.3','./asset-editor-page.js?v=12.3','./transactions.js?v=12.3','./cycle1070.js?v=12.3','./score1070.js?v=12.3','./news-center.js?v=12.3','./storage.js?v=12.3','./stocks.js?v=12.3','./chart.js?v=12.3','./portfolio.js?v=12.3','./editor.js?v=12.3','./analytics.js?v=12.3','./technical.js?v=12.3','./monitoring.js?v=12.3','./script.js?v=12.3','./manifest.json','./icon-192.png','./icon-512.png'
+ './style.css?v=12.4','./market-tools.js?v=12.4','./home-market-loader.js?v=12.4','./doubling-navi.js?v=12.4','./future-simulator.js?v=12.4','./app-shell.js?v=12.4','./asset-master.js?v=12.4','./asset-search.js?v=12.4','./asset-editor-page.js?v=12.4','./transactions.js?v=12.4','./cycle1070.js?v=12.4','./score1070.js?v=12.4','./news-center.js?v=12.4','./storage.js?v=12.4','./stocks.js?v=12.4','./chart.js?v=12.4','./portfolio.js?v=12.4','./editor.js?v=12.4','./analytics.js?v=12.4','./technical.js?v=12.4','./monitoring.js?v=12.4','./script.js?v=12.4','./manifest.json','./icon-192.png','./icon-512.png'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_FILES)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(name=>name!==CACHE_NAME).map(name=>caches.delete(name)))));self.clients.claim();});
