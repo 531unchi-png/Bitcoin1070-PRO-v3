@@ -1,5 +1,5 @@
 {
-  "name": "Bitcoin1070 PRO v12.4",
+  "name": "Bitcoin1070 PRO v13.0",
   "short_name": "Bitcoin1070",
   "description": "最安値起点の1070日サイクル、資産管理、相場分析を統合した投資ダッシュボード",
   "lang": "ja",
@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#07101f",
-  "theme_color": "#f58a0a",
+  "background_color": "#05070b",
+  "theme_color": "#080b11",
   "icons": [
     {
       "src": "icon-192.png",

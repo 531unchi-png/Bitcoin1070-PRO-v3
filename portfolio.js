@@ -1,6 +1,6 @@
 // =====================================
 // Portfolio Manager v3.0
-// Bitcoin1070 PRO
+// Bitcoin1070 PRO v13.0
 // =====================================
 
 // =====================================
@@ -257,17 +257,16 @@ function renderTotalAsset(evaluations) {
         totalElement.textContent = formatYen(total);
     }
 
-    if (commentElement) {
-        commentElement.innerHTML = `
-            仮想通貨・日本株・米国株・日本円 合計<br>
-            <span class="${getProfitClass(totalProfit)}">
-                損益：
-                ${totalProfit >= 0 ? "+" : ""}
-                ${formatYen(totalProfit)}
-                （${formatPercent(totalProfitRate)}）
-            </span>
-        `;
-    }
+    const profitElement=document.getElementById("totalProfit"),principalElement=document.getElementById("totalPrincipal");
+    if(profitElement){profitElement.textContent=`${totalProfit>=0?"+":""}${formatYen(totalProfit)}（${formatPercent(totalProfitRate)}）`;profitElement.className=getProfitClass(totalProfit);}
+    if(principalElement)principalElement.textContent=formatYen(totalCost);
+    if (commentElement) commentElement.textContent = profitKnown.length===evaluations.length ? "取得原価が確認できる保有資産から損益を計算" : "取得原価不明の銘柄は評価額だけに含め、損益計算から除外";
+    const grandTotal=total;
+    [{type:"crypto",id:"crypto"},{type:"jp",id:"jpStock"},{type:"us",id:"usStock"}].forEach(group=>{
+      const rows=evaluations.filter(a=>a.type===group.type),value=rows.reduce((n,a)=>n+a.marketValueJpy,0),known=rows.filter(a=>a.profitJpy!==null),cost=known.reduce((n,a)=>n+a.acquisitionValueJpy,0),profit=known.reduce((n,a)=>n+a.profitJpy,0),el=document.getElementById(group.id+"Metrics");
+      if(el)el.innerHTML=`構成比 ${grandTotal>0?(value/grandTotal*100).toFixed(1):"0.0"}%<br><b class="${getProfitClass(profit)}">損益 ${known.length?`${profit>=0?"+":""}${formatYen(profit)}（${formatPercent(cost>0?profit/cost*100:0)}）`:"原価未確定"}</b>`;
+    });
+    const cashMetrics=document.getElementById("cashMetrics");if(cashMetrics)cashMetrics.innerHTML=`構成比 ${grandTotal>0?(cashBalance/grandTotal*100).toFixed(1):"0.0"}%<br><b class="profit-neutral">価格損益なし</b>`;
 }
 
 // =====================================
@@ -303,6 +302,7 @@ function createAssetCard(asset) {
                 </span>
             </div>
 
+            <div class="asset-row asset-value-primary"><span>現在評価額</span><strong>${formatYen(asset.marketValueJpy)}</strong></div>
             <div class="asset-row">
                 <span>保有数量</span>
                 <strong>
@@ -314,20 +314,13 @@ function createAssetCard(asset) {
             </div>
 
             <div class="asset-row">
-                <span>平均取得単価</span>
-                <strong>${costText}</strong>
+                <span>平均取得単価／取得総額</span>
+                <strong>${costText}${asset.acquisitionValueJpy===null?"":` ／ ${formatYen(asset.acquisitionValueJpy)}`}</strong>
             </div>
 
             <div class="asset-row">
                 <span>現在価格</span>
                 <strong>${currentPriceText}</strong>
-            </div>
-
-            <div class="asset-row">
-                <span>評価額</span>
-                <strong>
-                    ${formatYen(asset.marketValueJpy)}
-                </strong>
             </div>
 
             <div class="asset-row">
@@ -711,9 +704,12 @@ function setupRestoreButton() {
             const restored =
                 await importAppData(file);
 
+            const summary={...restored.metadata,assetCount:restored.assets.length,transactionCount:restored.transactions.length,cashBalance:restored.cashBalance};
+            const created=summary.exportedAt?new Date(summary.exportedAt).toLocaleString("ja-JP"):"不明";
+            const approved=confirm(`復元内容を確認してください\n作成日時: ${created}\nアプリversion: ${summary.version}\nschemaVersion: ${summary.schemaVersion}\n銘柄数: ${summary.assetCount}\n取引件数: ${summary.transactionCount}\n日本円残高: ${summary.cashBalance===null?"バックアップ対象外":formatYen(summary.cashBalance)}\n\n現在のデータを置き換えますか？`);
+            if(!approved)return;
             assets = restored.assets;
-            transactionHistory =
-                restored.history;
+            transactionHistory = restored.history;
 
             saveAssetsToStorage(assets);
             saveHistoryToStorage(
