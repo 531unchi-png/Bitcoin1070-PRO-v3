@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v12.4 - shared asset search (local-first / online expansion)
+// Bitcoin1070 PRO v13.0 - shared asset search (local-first / online expansion)
 (function(global){
   const API_URL="https://bitcoin1070-api.531unchi.workers.dev";
   const TYPES={jp:"日本株",us:"米国株",crypto:"仮想通貨"};
@@ -31,7 +31,10 @@
     try{
       const url=`${API_URL}?mode=asset-search&q=${encodeURIComponent(q)}${type?`&type=${encodeURIComponent(type)}`:""}`;
       const response=await fetch(url,{cache:"no-store",signal});if(!response.ok)throw new Error(`HTTP ${response.status}`);
-      const data=await response.json();items=sortMatches([...base,...(Array.isArray(data.results)?data.results:[])],q,type);
+      const data=await response.json(),remote=Array.isArray(data.results)?data.results:[];
+      items=sortMatches([...base,...remote],q,type);
+      const exactLocal=sortMatches(base,q,type).filter(item=>rank(item,q)===0);
+      if(exactLocal.length){const exactKeys=new Set(exactLocal.map(item=>`${item.type}:${item.symbol}`));items=items.filter(item=>rank(item,q)===0||exactKeys.has(`${item.type}:${item.symbol}`));}
       return {items:items.slice(0,50),offline:false};
     }catch(error){if(error?.name==="AbortError")throw error;return {items:items.slice(0,50),offline:true};}
   }
