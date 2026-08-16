@@ -719,6 +719,9 @@ function setupRestoreButton() {
             saveHistoryToStorage(
                 transactionHistory
             );
+            if (Array.isArray(restored.transactions) && typeof saveTransactionsToStorage === "function") {
+                saveTransactionsToStorage(restored.transactions);
+            }
             if (restored.cashBalance !== null && restored.cashBalance !== undefined && typeof saveCashBalance === "function") {
                 saveCashBalance(restored.cashBalance);
             }
