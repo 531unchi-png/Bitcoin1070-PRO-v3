@@ -661,6 +661,7 @@ function setupBackupButton() {
     }
 
     button.addEventListener("click", () => {
+        try { requireDataManagement(); } catch (error) { alert(error.message); return; }
         exportAppData(
             assets,
             transactionHistory
@@ -690,6 +691,7 @@ function setupRestoreButton() {
     document.body.appendChild(input);
 
     button.addEventListener("click", () => {
+        try { requireDataManagement(); } catch (error) { alert(error.message); return; }
         input.click();
     });
 
@@ -701,6 +703,7 @@ function setupRestoreButton() {
         }
 
         try {
+            requireDataManagement();
             const restored =
                 await importAppData(file);
 
@@ -751,6 +754,7 @@ function setupResetButton() {
     }
 
     button.addEventListener("click", async () => {
+        try { requireDataManagement(); } catch (error) { alert(error.message); return; }
         const confirmed = confirm(
             "保存データをすべて初期化しますか？"
         );

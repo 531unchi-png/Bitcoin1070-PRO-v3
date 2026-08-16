@@ -5,6 +5,9 @@ const BACKUP_SCHEMA_VERSION=5;
 const DEMO_STORAGE_PREFIX="bitcoin1070_demo_v13::";
 function isDemoMode(){try{return sessionStorage.getItem("bitcoin1070_v13_demo")==="1";}catch(_){return false;}}
 function activeStorageKey(key){return isDemoMode()?DEMO_STORAGE_PREFIX+key:key;}
+const DEMO_DATA_MANAGEMENT_MESSAGE="デモモード中はデータ管理操作を利用できません。デモを終了してから操作してください。";
+function canUseDataManagement(){return !isDemoMode();}
+function requireDataManagement(){if(!canUseDataManagement())throw new Error(DEMO_DATA_MANAGEMENT_MESSAGE);return true;}
 function cloneValue(v){return typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));}
 function saveAssetsToStorage(assets){localStorage.setItem(activeStorageKey(STORAGE_KEYS.ASSETS),JSON.stringify(assets));}
 function loadAssetsFromStorage(defaultAssets){try{const saved=localStorage.getItem(activeStorageKey(STORAGE_KEYS.ASSETS));if(!saved)return cloneValue(defaultAssets);const parsed=JSON.parse(saved);return Array.isArray(parsed)?parsed:cloneValue(defaultAssets);}catch(e){console.error("資産データ読込エラー:",e);return cloneValue(defaultAssets);}}
