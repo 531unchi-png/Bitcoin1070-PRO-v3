@@ -599,6 +599,13 @@ function closeTutorial(
 document.addEventListener(
     "DOMContentLoaded",
     () => {
+        if (typeof summarizeRealizedPnl === "function") {
+            const realized = summarizeRealizedPnl();
+            const paint = (id, value) => { const el=document.getElementById(id); if(!el)return; el.textContent=`${value>=0?"＋":"−"}¥${Math.abs(Math.round(value)).toLocaleString("ja-JP")}`; el.classList.add(value>0?"profit-positive":value<0?"profit-negative":"profit-neutral"); };
+            paint("homeRealizedYear",realized.yearPnlJpy);paint("homeRealizedTotal",realized.totalPnlJpy);
+            const label=document.getElementById("homeRealizedYearLabel");if(label)label.textContent=`${realized.year}年の実現損益`;
+        }
+
         const nextButton =
             document.getElementById(
                 "tutorialNext"
