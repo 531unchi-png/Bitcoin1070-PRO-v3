@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v13.0 - Storage Manager (backward compatible / validated restore)
+// Bitcoin1070 PRO v13.1 - Storage Manager (backward compatible / validated restore)
 const STORAGE_KEYS={ASSETS:"bitcoin1070_v3_assets",HISTORY:"bitcoin1070_v3_history",TRANSACTIONS:"bitcoin1070_v12_3_transactions"};
 const CASH_STORAGE_KEY="bitcoin1070_v12_1_cash_jpy";
 const BACKUP_SCHEMA_VERSION=5;
@@ -28,7 +28,13 @@ function sanitizeTransaction(item,index=0){
     out.type=safeString(item.type,"transaction.type",20);if(!["crypto","jp","us"].includes(out.type))throw new Error("取引typeが不正です");
     out.symbol=safeString(item.symbol,"transaction.symbol",40);out.name=safeString(item.name,"transaction.name",120);
     out.quantity=safeNumber(item.quantity,"transaction.quantity",{positive:true});out.unitPrice=safeNumber(item.unitPrice,"transaction.unitPrice",{positive:true});
-    out.fxRate=safeNumber(item.fxRate??1,"transaction.fxRate",{positive:true});out.feeJpy=safeNumber(item.feeJpy??0,"transaction.feeJpy");out.costBasisJpy=safeNumber(item.costBasisJpy??0,"transaction.costBasisJpy");
+    out.fxRate=safeNumber(item.fxRate??1,"transaction.fxRate",{positive:true});out.feeJpy=safeNumber(item.feeJpy??0,"transaction.feeJpy");out.costBasisJpy=safeNumber(item.costBasisJpy,"transaction.costBasisJpy",{nullable:true});
+    if(kind==="SELL"){
+      out.saleProceedsJpy=safeNumber(item.saleProceedsJpy,"transaction.saleProceedsJpy",{nullable:true});
+      out.realizedPnlJpy=item.realizedPnlJpy==null?null:safeNumber(Math.abs(Number(item.realizedPnlJpy)),"transaction.realizedPnlJpy")*(Number(item.realizedPnlJpy)<0?-1:1);
+      out.realizedPnlRate=item.realizedPnlRate==null?null:safeNumber(Math.abs(Number(item.realizedPnlRate)),"transaction.realizedPnlRate")*(Number(item.realizedPnlRate)<0?-1:1);
+      out.saleUsdJpy=safeNumber(item.saleUsdJpy,"transaction.saleUsdJpy",{nullable:true});
+    }
   }
   return out;
 }
@@ -58,7 +64,7 @@ function createLedgerEntry(input,currentCash){
   const gross=quantity*unitPrice*fxRate,totalJpy=kind==="BUY"?gross+feeJpy:gross-feeJpy;
   if(totalJpy<=0)throw new Error("取引総額が不正です");
   if(kind==="BUY"&&totalJpy>currentCash)throw new Error("日本円残高が不足しています");
-  return {id,date,kind,type,symbol,name,quantity,unitPrice,fxRate,feeJpy,totalJpy,cashDelta:kind==="BUY"?-totalJpy:totalJpy,costBasisJpy:0};
+  return {id,date,kind,type,symbol,name,quantity,unitPrice,fxRate,feeJpy,totalJpy,cashDelta:kind==="BUY"?-totalJpy:totalJpy,costBasisJpy:null,...(kind==="SELL"?{saleProceedsJpy:gross,realizedPnlJpy:null,realizedPnlRate:null,saleUsdJpy:type==="us"?fxRate:null}:{})};
 }
 function applyLedgerTransaction(currentAssets,currentCash,input){
   const assets=currentAssets.map(sanitizeAsset),entry=createLedgerEntry(input,currentCash);let cash=Number(currentCash);
@@ -72,11 +78,20 @@ function applyLedgerTransaction(currentAssets,currentCash,input){
     if(unitCostJpy!==null){const nextUnitJpy=(unitCostJpy*oldAmount+entry.totalJpy)/nextAmount;if(entry.type==="us"){asset.cost=(Number(asset.cost)*oldAmount+entry.unitPrice*entry.quantity)/nextAmount;asset.costJpy=nextUnitJpy;asset.acquisitionUsdJpy=asset.cost>0?nextUnitJpy/asset.cost:entry.fxRate;}else asset.cost=nextUnitJpy;}
     else if(oldAmount===0){asset.cost=entry.unitPrice+(entry.type==="us"?0:entry.feeJpy/entry.quantity);if(entry.type==="us"){asset.costJpy=entry.totalJpy/entry.quantity;asset.acquisitionUsdJpy=asset.costJpy/asset.cost;}}
     asset.amount=nextAmount;
-  }else{entry.costBasisJpy=unitCostJpy===null?0:unitCostJpy*entry.quantity;asset.amount=Math.max(0,oldAmount-entry.quantity);}
+  }else{entry.costBasisJpy=unitCostJpy===null?null:unitCostJpy*entry.quantity;if(entry.costBasisJpy!==null){entry.realizedPnlJpy=entry.saleProceedsJpy-entry.costBasisJpy-entry.feeJpy;entry.realizedPnlRate=entry.costBasisJpy>0?entry.realizedPnlJpy/entry.costBasisJpy*100:null;}asset.amount=Math.max(0,oldAmount-entry.quantity);}
   cash+=entry.cashDelta;if(cash<0)throw new Error("日本円残高が不正です");return {assets,cashBalance:cash,entry};
 }
 function commitLedgerTransaction(input){const result=applyLedgerTransaction(loadAssetsFromStorage([]),loadCashBalance(),input),items=loadTransactionsFromStorage();saveAssetsToStorage(result.assets);saveCashBalance(result.cashBalance);saveTransactionsToStorage([result.entry,...items]);return result;}
-function exportAppData(assets,history){const backup={schemaVersion:BACKUP_SCHEMA_VERSION,version:"13.0",exportedAt:new Date().toISOString(),cashBalance:loadCashBalance(),assets,history,transactions:loadTransactionsFromStorage()};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=`bitcoin1070-backup-${Date.now()}.json`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);}
+function summarizeRealizedPnl(items=loadTransactionsFromStorage(),year=new Date().getFullYear()){
+  const summary={year,totalPnlJpy:0,yearPnlJpy:0,sellCount:0,yearSellCount:0,profitCount:0,lossCount:0,unavailableCount:0,byAsset:[]},assets=new Map();
+  items.filter(item=>item.kind==="SELL").forEach(item=>{
+    const itemYear=new Date(item.date).getFullYear(),isYear=itemYear===year,pnl=Number(item.realizedPnlJpy),available=item.realizedPnlJpy!==null&&item.realizedPnlJpy!==undefined&&Number.isFinite(pnl),key=`${item.type}:${item.symbol}`;
+    summary.sellCount++;if(isYear)summary.yearSellCount++;if(!available)summary.unavailableCount++;else{summary.totalPnlJpy+=pnl;if(isYear)summary.yearPnlJpy+=pnl;if(pnl>0)summary.profitCount++;else if(pnl<0)summary.lossCount++;}
+    if(!assets.has(key))assets.set(key,{type:item.type,symbol:item.symbol,name:item.name,totalPnlJpy:0,yearPnlJpy:0,sellCount:0,unavailableCount:0});const asset=assets.get(key);asset.sellCount++;if(!available)asset.unavailableCount++;else{asset.totalPnlJpy+=pnl;if(isYear)asset.yearPnlJpy+=pnl;}
+  });
+  summary.byAsset=[...assets.values()].sort((a,b)=>Math.abs(b.totalPnlJpy)-Math.abs(a.totalPnlJpy)||a.symbol.localeCompare(b.symbol));return summary;
+}
+function exportAppData(assets,history){const backup={schemaVersion:BACKUP_SCHEMA_VERSION,version:"13.1",exportedAt:new Date().toISOString(),cashBalance:loadCashBalance(),assets,history,transactions:loadTransactionsFromStorage()};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=`bitcoin1070-backup-${Date.now()}.json`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);}
 function backupSummary(data){return {version:String(data.version||"不明"),schemaVersion:data.schemaVersion??"旧形式",exportedAt:data.exportedAt||null,assetCount:Array.isArray(data.assets)?data.assets.length:0,transactionCount:Array.isArray(data.transactions)?data.transactions.length:0,cashBalance:Number(data.cashBalance||0)};}
 function importAppData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result),schema=data.schemaVersion;if(schema!==undefined&&![4,5].includes(schema))throw new Error(`未対応のバックアップ形式です (schemaVersion: ${schema})`);if(!Array.isArray(data.assets))throw new Error("資産データの形式が不正です");const assets=data.assets.map(sanitizeAsset),history=sanitizeHistory(data.history),transactions=Array.isArray(data.transactions)?data.transactions.map(sanitizeTransaction):[];let cashBalance=null;if(data.cashBalance!=null)cashBalance=safeNumber(data.cashBalance,"cashBalance");resolve({assets,history,cashBalance,transactions,metadata:backupSummary(data)});}catch(e){reject(e);}};reader.onerror=()=>reject(new Error("ファイルの読み込みに失敗しました"));reader.readAsText(file);});}
 function resetAppStorage(){localStorage.removeItem(activeStorageKey(STORAGE_KEYS.ASSETS));localStorage.removeItem(activeStorageKey(STORAGE_KEYS.HISTORY));localStorage.removeItem(activeStorageKey(STORAGE_KEYS.TRANSACTIONS));localStorage.removeItem(activeStorageKey(CASH_STORAGE_KEY));}
