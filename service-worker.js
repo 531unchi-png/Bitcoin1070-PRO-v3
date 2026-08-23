@@ -1,5 +1,5 @@
 // Bitcoin1070 PRO Service Worker v14.2
-const CACHE_NAME='bitcoin1070-pro-v14-2-build1';
+const CACHE_NAME='bitcoin1070-pro-v14-2-build2';
 const APP_FILES=[
  './','./index.html','./guide.html','./privacy.html','./doubling-navi.html','./future-simulator.html','./market.html','./portfolio.html','./portfolio-edit.html','./transactions.html','./analysis.html','./news.html','./settings.html','./cycle1070.html',
  './style.css?v=14.2','./home-assets-cleanup.css?v=14.2','./decision-center.css?v=14.2','./market-tools.js?v=14.2','./home-market-loader.js?v=14.2','./doubling-navi.js?v=14.2','./future-simulator.js?v=14.2','./app-shell.js?v=14.2','./asset-master.js?v=14.2','./asset-search.js?v=14.2','./asset-editor-page.js?v=14.2','./transactions.js?v=14.2','./cycle1070.js?v=14.2','./score1070.js?v=14.2','./news-center.js?v=14.2','./storage.js?v=14.2','./stocks.js?v=14.2','./chart.js?v=14.2','./portfolio.js?v=14.2','./daily-change.js?v=14.2','./decision-center.js?v=14.2','./decision-tools-ui.js?v=14.2','./editor.js?v=14.2','./analytics.js?v=14.2','./technical.js?v=14.2','./monitoring.js?v=14.2','./script.js?v=14.2','./premium-ux.js?v=14.2','./manifest.json?v=14.2','./icon-192.png','./icon-512.png'
