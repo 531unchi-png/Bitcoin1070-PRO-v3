@@ -1,0 +1,20 @@
+/* Bitcoin1070 PRO v13.1 - Home / Assets role cleanup */
+.home-summary-note{margin:10px 0 0;color:var(--muted,#aab0bc);font-size:.82rem;line-height:1.55}
+.home-detail-link{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:12px 14px;border:1px solid rgba(245,138,10,.28);border-radius:14px;text-decoration:none;color:inherit;background:rgba(245,138,10,.06)}
+.home-detail-link strong{color:#f6b84a}.home-detail-link span{font-size:.78rem;color:var(--muted,#aab0bc)}
+.asset-first-home .category-nav-button small{opacity:.8}
+.portfolio-overview-note{margin:0 0 12px;color:var(--muted,#aab0bc);font-size:.82rem;line-height:1.55}
+.portfolio-primary-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.portfolio-primary-actions .page-link-button{min-width:0;margin:0;text-align:center}
+.daily-change-row{margin-top:2px;padding-top:9px;border-top:1px solid rgba(255,255,255,.06)}
+.daily-change-row strong{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+@media(max-width:520px){
+  .asset-first-home .home-asset-hero .hero-realized:nth-of-type(3){display:none}
+  .asset-first-home .home-asset-hero .hero-principal{display:none}
+  .asset-first-home .asset-hero-actions a[href="portfolio-edit.html"]{display:none}
+  .asset-first-home .category-nav-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .asset-first-home .category-box{padding:12px 10px}
+  .asset-first-home .category-metrics{font-size:.72rem}
+  .portfolio-primary-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .portfolio-primary-actions .page-link-button{font-size:.8rem;padding:11px 8px}
+}
