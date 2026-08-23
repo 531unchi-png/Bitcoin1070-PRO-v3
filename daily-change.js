@@ -1,8 +1,11 @@
-// Bitcoin1070 PRO v13.1 - per-asset daily change display
+// Bitcoin1070 PRO v14.0 - resilient per-asset daily change display
 (() => {
   const API = "https://bitcoin1070-api.531unchi.workers.dev";
-  const CACHE_KEY = "bitcoin1070_daily_changes_v13_1";
+  const CACHE_KEY = "bitcoin1070_daily_changes_v14_0";
   const MAX_AGE = 15 * 60 * 1000;
+  let currentValues = {};
+  let observer = null;
+  let decorateQueued = false;
 
   const assetKey = asset => `${asset.type}:${String(asset.symbol || "").trim().toUpperCase()}`;
   const validNumber = value => { const n = Number(value); return Number.isFinite(n) ? n : null; };
@@ -88,39 +91,81 @@
     return `${sign}¥${Math.round(Math.abs(n)).toLocaleString("ja-JP")}`;
   }
 
-  function decorateCards(values) {
+  function renderValue(value, change, type) {
+    if (!change || !Number.isFinite(Number(change.percent))) {
+      value.textContent = "--";
+      value.className = "profit-neutral";
+      return;
+    }
+    const p = Number(change.percent), sign = p > 0 ? "+" : "";
+    const amount = formatAmount(change.amount, type);
+    value.textContent = `${sign}${p.toFixed(2)}%${amount ? `（${amount}）` : ""}`;
+    value.className = p > 0 ? "profit-positive" : p < 0 ? "profit-negative" : "profit-neutral";
+  }
+
+  function decorateCards() {
     document.querySelectorAll("#portfolioList .asset-card").forEach(card => {
-      if (card.querySelector(".daily-change-row")) return;
-      const type = typeFromCard(card), symbol = String(card.querySelector(".asset-symbol")?.textContent || "").trim().toUpperCase();
+      const type = typeFromCard(card);
+      const symbol = String(card.querySelector(".asset-symbol")?.textContent || "").trim().toUpperCase();
       if (!type || !symbol) return;
-      const change = values[`${type}:${symbol}`];
-      const row = document.createElement("div");
-      row.className = "asset-row daily-change-row";
-      const label = document.createElement("span"); label.textContent = type === "crypto" ? "24時間比" : "前日比";
-      const value = document.createElement("strong");
-      if (!change || !Number.isFinite(Number(change.percent))) {
-        value.textContent = "--"; value.className = "profit-neutral";
-      } else {
-        const p = Number(change.percent), sign = p > 0 ? "+" : "";
-        const amount = formatAmount(change.amount, type);
-        value.textContent = `${sign}${p.toFixed(2)}%${amount ? `（${amount}）` : ""}`;
-        value.className = p > 0 ? "profit-positive" : p < 0 ? "profit-negative" : "profit-neutral";
+      const change = currentValues[`${type}:${symbol}`];
+      let row = card.querySelector(".daily-change-row");
+      if (!row) {
+        row = document.createElement("div");
+        row.className = "asset-row daily-change-row";
+        const label = document.createElement("span");
+        label.textContent = type === "crypto" ? "24時間比" : "前日比";
+        const value = document.createElement("strong");
+        row.append(label, value);
+        const priceRow = [...card.querySelectorAll(".asset-row")].find(el => el.querySelector("span")?.textContent?.trim() === "現在価格");
+        if (priceRow) priceRow.insertAdjacentElement("afterend", row); else card.appendChild(row);
       }
-      row.append(label, value);
-      const priceRow = [...card.querySelectorAll(".asset-row")].find(el => el.querySelector("span")?.textContent?.trim() === "現在価格");
-      if (priceRow) priceRow.insertAdjacentElement("afterend", row); else card.appendChild(row);
+      const label = row.querySelector("span");
+      if (label) label.textContent = type === "crypto" ? "24時間比" : "前日比";
+      let value = row.querySelector("strong");
+      if (!value) { value = document.createElement("strong"); row.appendChild(value); }
+      renderValue(value, change, type);
     });
   }
 
-  async function refresh() {
-    const values = await loadChanges();
-    let tries = 0;
-    const timer = setInterval(() => {
-      decorateCards(values);
-      tries += 1;
-      if (document.querySelectorAll("#portfolioList .asset-card").length || tries >= 20) clearInterval(timer);
-    }, 250);
+  function queueDecorate() {
+    if (decorateQueued) return;
+    decorateQueued = true;
+    requestAnimationFrame(() => {
+      decorateQueued = false;
+      decorateCards();
+    });
   }
 
-  document.addEventListener("DOMContentLoaded", () => refresh().catch(error => console.warn("前日比表示エラー", error)));
+  function observePortfolio() {
+    const list = document.getElementById("portfolioList");
+    if (!list || observer) return;
+    observer = new MutationObserver(() => queueDecorate());
+    observer.observe(list, { childList: true, subtree: true });
+    queueDecorate();
+  }
+
+  async function refresh() {
+    currentValues = readCache();
+    observePortfolio();
+    queueDecorate();
+    try {
+      const values = await loadChanges();
+      currentValues = values;
+    } catch (error) {
+      console.warn("前日比表示エラー", error);
+    }
+    queueDecorate();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    observePortfolio();
+    refresh();
+    let tries = 0;
+    const waitForList = setInterval(() => {
+      observePortfolio();
+      queueDecorate();
+      if (observer || ++tries >= 40) clearInterval(waitForList);
+    }, 250);
+  });
 })();
