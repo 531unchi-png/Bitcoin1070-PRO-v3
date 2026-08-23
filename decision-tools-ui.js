@@ -1,0 +1,14 @@
+// Bitcoin1070 PRO v14.0 - Portfolio decision tools
+(() => {
+'use strict';
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const n=v=>Number.isFinite(Number(v))?Number(v):null;
+function options(api){return api.holdings().filter(a=>a.type!=='cash').map(a=>`<option value="${esc(api.keyOf(a))}">${esc(a.symbol)} ${esc(a.name||'')}</option>`).join('')}
+function renderHealth(api){const h=api.health(), el=$('#portfolioHealth');if(!el)return;el.innerHTML=`<div class="health-score"><strong>${h.score===null?'--':h.score}</strong><span>/100 ${esc(h.label)}</span></div><div class="health-issues">${h.issues.map(x=>`<p>• ${esc(x)}</p>`).join('')}</div>`}
+function renderPlans(api){const el=$('#tradePlanList');if(!el)return;const all=api.plans();const rows=api.holdings().filter(a=>a.type!=='cash').map(a=>{const k=api.keyOf(a),p=all[k];if(!p)return'';return `<div class="tool-rule"><strong>${esc(a.symbol)}</strong><small>利確1 ${esc(p.take1||'--')} / 利確2 ${esc(p.take2||'--')} / 最終 ${esc(p.takeFinal||'--')} / 損切 ${esc(p.stop||'--')}</small></div>`}).filter(Boolean);el.innerHTML=rows.join('')||'<p class="small">まだ売買プランはありません。</p>'}
+function renderAlerts(api){const el=$('#alertRuleList');if(!el)return;const rules=api.alerts();el.innerHTML=rules.map((r,i)=>`<div class="tool-rule"><div><strong>${esc(r.assetKey.split(':')[1])}</strong><small>価格 ${r.operator==='>='?'以上':'以下'} ${esc(r.target)}</small></div><button data-del-alert="${i}" type="button">削除</button></div>`).join('')||'<p class="small">まだアラート条件はありません。</p>';el.querySelectorAll('[data-del-alert]').forEach(b=>b.onclick=()=>{const x=api.alerts();x.splice(Number(b.dataset.delAlert),1);api.saveAlerts(x);renderAlerts(api)})}
+function init(){const api=window.Bitcoin1070DecisionCenter;if(!api)return;renderHealth(api);renderPlans(api);renderAlerts(api);document.querySelectorAll('.decision-asset-select').forEach(s=>s.innerHTML=options(api));
+$('#tradePlanForm')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),key=f.get('assetKey');if(!key)return;api.savePlan(key,{take1:n(f.get('take1')),take2:n(f.get('take2')),takeFinal:n(f.get('takeFinal')),stop:n(f.get('stop'))});renderPlans(api);e.currentTarget.reset()});
+$('#alertRuleForm')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),key=f.get('assetKey'),target=n(f.get('target'));if(!key||target===null)return;const rules=api.alerts();rules.push({assetKey:key,operator:f.get('operator')==='>='?'>=':'<=',target,enabled:true,createdAt:new Date().toISOString()});api.saveAlerts(rules);renderAlerts(api);e.currentTarget.reset()});}
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(init,400);setTimeout(()=>{const api=window.Bitcoin1070DecisionCenter;if(api)renderHealth(api)},2500)});
+})();
