@@ -2,25 +2,16 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f58a0a"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icon-512.PNG">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ホーム | Bitcoin1070 PRO v13.1</title><link rel="stylesheet" href="style.css?v=13.1">
-<script src="https://cdn.jsdelivr.net/npm/chart.js?v=13.1"></script><script src="https://s3.tradingview.com/tv.js?v=13.1"></script></head><body><header class="app-header asset-first-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v13.1</span></div><h1>💼 マイ資産</h1><p>総資産・ジャンル・保有銘柄を最初に確認</p></header><main class="container app-page asset-first-home">
+<title>ホーム | Bitcoin1070 PRO v13.1</title><link rel="stylesheet" href="style.css?v=13.1"><link rel="stylesheet" href="home-assets-cleanup.css?v=13.1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js?v=13.1"></script><script src="https://s3.tradingview.com/tv.js?v=13.1"></script></head><body><header class="app-header asset-first-header"><div class="app-brand">₿ Bitcoin1070 PRO <span>v13.1</span></div><h1>🏠 ホーム</h1><p>資産と市場の「いま」を素早く確認</p></header><main class="container app-page asset-first-home">
 
-<section class="card hero-asset home-asset-hero"><span class="eyebrow">TOTAL ASSETS</span><h2 id="totalAsset">¥0</h2><div class="hero-profit"><span>全体含み損益</span><strong id="totalProfit">--</strong></div><div class="hero-realized"><span id="homeRealizedYearLabel">今年の実現損益</span><strong id="homeRealizedYear">--</strong></div><div class="hero-realized"><span>累計実現損益</span><strong id="homeRealizedTotal">--</strong></div><div class="hero-principal"><span>投資元本</span><strong id="totalPrincipal">--</strong></div><p id="assetComment">最新価格を取得中...</p><div class="asset-hero-actions"><a href="transactions.html">📒 売買・入出金</a><a href="portfolio-edit.html">✏️ 資産を編集</a><button type="button" id="homeRefreshAsset">↻ 価格を更新</button></div></section>
+<section class="card hero-asset home-asset-hero"><span class="eyebrow">TOTAL ASSETS</span><h2 id="totalAsset">¥0</h2><div class="hero-profit"><span>全体含み損益</span><strong id="totalProfit">--</strong></div><div class="hero-realized"><span id="homeRealizedYearLabel">今年の実現損益</span><strong id="homeRealizedYear">--</strong></div><p id="assetComment">最新価格を取得中...</p><div class="asset-hero-actions"><button type="button" id="homeRefreshAsset">↻ 価格を更新</button></div><a class="home-detail-link" href="portfolio.html"><strong>資産の詳細を見る →</strong><span>銘柄・推移・構成・ランキング</span></a></section>
 
-<section class="card category-navigation-card" id="assetCategories"><div class="section-heading-row"><div><span class="eyebrow">ASSET CATEGORIES</span><h2>📊 ジャンル別資産</h2></div><small>タップで銘柄一覧へ</small></div><div class="category-summary category-nav-grid">
-<a class="category-box category-nav-button crypto-category" href="#assets-crypto"><span>🪙 仮想通貨</span><strong id="cryptoTotal">¥0</strong><span id="cryptoMetrics" class="category-metrics">--</span><small>保有銘柄を見る ↓</small></a>
-<a class="category-box category-nav-button jp-category" href="#assets-jp"><span>🇯🇵 日本株</span><strong id="jpStockTotal">¥0</strong><span id="jpStockMetrics" class="category-metrics">--</span><small>保有銘柄を見る ↓</small></a>
-<a class="category-box category-nav-button us-category" href="#assets-us"><span>🇺🇸 米国株</span><strong id="usStockTotal">¥0</strong><span id="usStockMetrics" class="category-metrics">--</span><small>保有銘柄を見る ↓</small></a>
-<a class="category-box category-nav-button cash-category" href="#assets-cash"><span>💴 日本円</span><strong id="cashTotal">¥0</strong><span id="cashMetrics" class="category-metrics">--</span><small>現金残高を見る ↓</small></a>
-</div></section>
-
-<section class="card home-holdings-card"><div class="section-heading-row"><div><span class="eyebrow">MY HOLDINGS</span><h2>📋 各銘柄</h2></div><a class="compact-edit-link" href="portfolio-edit.html">編集</a></div><div id="portfolioList"><div class="loading-state">保有資産を読み込み中...</div></div></section>
-
-<section class="home-tools-section"><div class="section-heading-row"><div><span class="eyebrow">TOOLS</span><h2>便利な機能</h2></div></div><div class="quick-grid compact-tools-grid">
-<a class="quick-card" href="analysis.html"><span>🧠</span><strong>AI分析</strong><small>保有銘柄を評価</small></a>
-<a class="quick-card" href="future-simulator.html"><span>🔮</span><strong>30年未来予測</strong><small>弱気・標準・強気</small></a>
-<a class="quick-card doubling-link" href="doubling-navi.html"><span>🚀</span><strong>資産倍増ナビ</strong><small>買付配分を確認</small></a>
-<a class="quick-card" href="portfolio.html"><span>📈</span><strong>資産詳細</strong><small>推移・構成・履歴</small></a>
+<section class="card category-navigation-card" id="assetCategories"><div class="section-heading-row"><div><span class="eyebrow">ASSET SNAPSHOT</span><h2>📊 ジャンル別</h2></div><small>詳細は資産画面へ</small></div><div class="category-summary category-nav-grid">
+<a class="category-box category-nav-button crypto-category" href="portfolio.html#assets-crypto"><span>🪙 仮想通貨</span><strong id="cryptoTotal">¥0</strong><span id="cryptoMetrics" class="category-metrics">--</span><small>詳細 →</small></a>
+<a class="category-box category-nav-button jp-category" href="portfolio.html#assets-jp"><span>🇯🇵 日本株</span><strong id="jpStockTotal">¥0</strong><span id="jpStockMetrics" class="category-metrics">--</span><small>詳細 →</small></a>
+<a class="category-box category-nav-button us-category" href="portfolio.html#assets-us"><span>🇺🇸 米国株</span><strong id="usStockTotal">¥0</strong><span id="usStockMetrics" class="category-metrics">--</span><small>詳細 →</small></a>
+<a class="category-box category-nav-button cash-category" href="portfolio.html#assets-cash"><span>💴 日本円</span><strong id="cashTotal">¥0</strong><span id="cashMetrics" class="category-metrics">--</span><small>詳細 →</small></a>
 </div></section>
 
 <section class="grid compact-grid"><div class="card"><div class="title">BTC価格</div><div class="big" id="btcPrice">取得中...</div><div class="small">24時間 <span id="btcChange">--</span></div></div><div class="card"><div class="title">Fear & Greed</div><div class="big" id="fear">取得中...</div></div></section>
@@ -30,4 +21,11 @@
 <section class="card score-card home-score-card" id="bitcoin1070ScoreCard"><div class="score-card-head"><div><span class="eyebrow">BITCOIN1070 INDEX</span><h2>🧠 Bitcoin1070指数</h2></div><button type="button" id="refreshScoreButton" class="score-refresh">↻ 更新</button></div><div class="score-main"><div class="score-gauge" id="scoreGauge" style="--score:0"><div><strong id="scoreValue">--</strong><span>/ 100</span></div></div><div class="score-summary"><span id="scoreStars">☆☆☆☆☆</span><strong id="scoreLabel">計算中...</strong><p id="scoreMessage">市場データを取得して指数を計算しています。</p><small id="scoreUpdatedAt">未更新</small></div></div><details class="score-details"><summary>指数の内訳を見る</summary><div id="scoreBreakdown" class="score-breakdown"><div class="loading-state">計算中...</div></div></details></section>
 <section class="grid score-signal-grid"><div class="card"><div class="title">✅ 良いサイン</div><div id="positiveSignals" class="signal-list"><p class="small">分析中...</p></div></div><div class="card"><div class="title">⚠️ 危険サイン</div><div id="riskSignals" class="signal-list"><p class="small">分析中...</p></div></div></section>
 <section class="card"><div class="title">🎯 今日の戦略</div><div id="todayStrategy" class="strategy-box">指数を計算中...</div><p class="technical-disclaimer">本指数は1070日理論と公開市場データを使った参考指標です。売買を推奨するものではありません。</p></section>
+
+<section class="home-tools-section"><div class="section-heading-row"><div><span class="eyebrow">TOOLS</span><h2>便利な機能</h2></div></div><div class="quick-grid compact-tools-grid">
+<a class="quick-card" href="analysis.html"><span>🧠</span><strong>AI分析</strong><small>保有銘柄を評価</small></a>
+<a class="quick-card" href="future-simulator.html"><span>🔮</span><strong>30年未来予測</strong><small>弱気・標準・強気</small></a>
+<a class="quick-card doubling-link" href="doubling-navi.html"><span>🚀</span><strong>資産倍増ナビ</strong><small>買付配分を確認</small></a>
+<a class="quick-card" href="transactions.html"><span>📒</span><strong>売買台帳</strong><small>実現損益を確認</small></a>
+</div></section>
 </main><nav class="bottom-nav" aria-label="メインメニュー"><a href="index.html" class="active"><span>⌂</span><small>ホーム</small></a><a href="market.html"><span>📈</span><small>相場</small></a><a href="portfolio.html"><span>💼</span><small>資産</small></a><a href="news.html"><span>📰</span><small>情報</small></a><a href="settings.html"><span>⚙️</span><small>設定</small></a></nav><script src="stocks.js?v=13.1"></script><script src="storage.js?v=13.1"></script><script src="chart.js?v=13.1"></script><script src="portfolio.js?v=13.1"></script><script src="analytics.js?v=13.1"></script><script src="cycle1070.js?v=13.1"></script><script src="home-market-loader.js?v=13.1"></script><script src="script.js?v=13.1"></script><script src="app-shell.js?v=13.1"></script><script src="score1070.js?v=13.1"></script><script src="premium-ux.js?v=13.1"></script></body></html>
