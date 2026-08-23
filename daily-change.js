@@ -37,8 +37,18 @@
     return out;
   }
 
+  function yahooSymbolFor(asset) {
+    const symbol = String(asset.symbol || "").trim().toUpperCase();
+    const legacy = (typeof DEFAULT_YAHOO_SYMBOLS !== "undefined" && DEFAULT_YAHOO_SYMBOLS) ? DEFAULT_YAHOO_SYMBOLS[symbol] : "";
+    if (asset.yahooSymbol) return String(asset.yahooSymbol).trim();
+    if (legacy) return legacy;
+    if (asset.type === "us") return symbol;
+    if (asset.type === "jp" && /^\d{4}$/.test(symbol)) return `${symbol}.T`;
+    return "";
+  }
+
   async function fetchStockChange(asset) {
-    const yahoo = String(asset.yahooSymbol || (asset.type === "us" ? asset.symbol : "")).trim();
+    const yahoo = yahooSymbolFor(asset);
     if (!yahoo) return null;
     const response = await fetch(`${API}?mode=history&symbol=${encodeURIComponent(yahoo)}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`${asset.symbol} history HTTP ${response.status}`);
@@ -71,10 +81,11 @@
   }
 
   function formatAmount(value, type) {
-    if (!Number.isFinite(Number(value))) return "";
-    const n = Number(value), sign = n > 0 ? "+" : "";
-    if (type === "us") return `${sign}$${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.replace("+$", "+$").replace("-$", "-$");
-    return `${sign}¥${Math.round(Math.abs(n)).toLocaleString("ja-JP")}`.replace("+¥", "+¥").replace("-¥", "-¥");
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "";
+    const sign = n > 0 ? "+" : n < 0 ? "-" : "";
+    if (type === "us") return `${sign}$${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${sign}¥${Math.round(Math.abs(n)).toLocaleString("ja-JP")}`;
   }
 
   function decorateCards(values) {
