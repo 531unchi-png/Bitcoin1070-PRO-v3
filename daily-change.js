@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v14.0 - resilient per-asset daily change display
+// Bitcoin1070 PRO v14.2 - resilient per-asset daily change provider
 (() => {
   const API = "https://bitcoin1070-api.531unchi.workers.dev";
   const CACHE_KEY = "bitcoin1070_daily_changes_v14_0";
@@ -9,6 +9,8 @@
 
   const assetKey = asset => `${asset.type}:${String(asset.symbol || "").trim().toUpperCase()}`;
   const validNumber = value => { const n = Number(value); return Number.isFinite(n) ? n : null; };
+  const masterFor = asset => (Array.isArray(window.B1070_ASSET_MASTER) ? window.B1070_ASSET_MASTER : []).find(row => row.type === asset.type && String(row.symbol || "").trim().toUpperCase() === String(asset.symbol || "").trim().toUpperCase());
+  const coinGeckoIdFor = asset => String(asset.coinGeckoId || masterFor(asset)?.coinGeckoId || "").trim().toLowerCase();
 
   function readCache() {
     try {
@@ -23,14 +25,15 @@
   }
 
   async function fetchCryptoChanges(list) {
-    const ids = [...new Set(list.map(a => String(a.coinGeckoId || "").trim().toLowerCase()).filter(Boolean))];
+    const ids = [...new Set(list.map(coinGeckoIdFor).filter(Boolean))];
     if (!ids.length) return {};
     const response = await fetch(`${API}?mode=crypto&ids=${encodeURIComponent(ids.join(","))}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`crypto daily change HTTP ${response.status}`);
     const data = await response.json();
     const out = {};
     list.forEach(asset => {
-      const row = data?.prices?.[String(asset.coinGeckoId || "").trim().toLowerCase()];
+      const id = coinGeckoIdFor(asset);
+      const row = data?.prices?.[id];
       const percent = validNumber(row?.jpy_24h_change);
       const current = validNumber(row?.jpy);
       if (percent === null) return;
@@ -44,6 +47,8 @@
     const symbol = String(asset.symbol || "").trim().toUpperCase();
     const legacy = (typeof DEFAULT_YAHOO_SYMBOLS !== "undefined" && DEFAULT_YAHOO_SYMBOLS) ? DEFAULT_YAHOO_SYMBOLS[symbol] : "";
     if (asset.yahooSymbol) return String(asset.yahooSymbol).trim();
+    const master = masterFor(asset);
+    if (master?.yahooSymbol) return String(master.yahooSymbol).trim();
     if (legacy) return legacy;
     if (asset.type === "us") return symbol;
     if (asset.type === "jp" && /^\d{4}$/.test(symbol)) return `${symbol}.T`;
@@ -62,14 +67,15 @@
     return { percent: (current - previous) / previous * 100, amount: current - previous, basis: "previousClose" };
   }
 
-  async function loadChanges() {
+  async function loadChanges({ force = false } = {}) {
     const list = (typeof assets !== "undefined" && Array.isArray(assets)) ? assets.filter(a => ["crypto", "jp", "us"].includes(a.type)) : [];
     if (!list.length) return {};
     const cached = readCache();
-    if (Object.keys(cached).length) return cached;
-    const values = {};
-    try { Object.assign(values, await fetchCryptoChanges(list.filter(a => a.type === "crypto"))); } catch (error) { console.warn("暗号資産前日比取得失敗", error); }
-    const stockResults = await Promise.allSettled(list.filter(a => a.type === "jp" || a.type === "us").map(async asset => [assetKey(asset), await fetchStockChange(asset)]));
+    if (!force && Object.keys(cached).length && list.every(asset => cached[assetKey(asset)])) return cached;
+    const values = { ...cached };
+    try { Object.assign(values, await fetchCryptoChanges(list.filter(a => a.type === "crypto"))); } catch (error) { console.warn("暗号資産24時間比取得失敗", error); }
+    const missingStocks = list.filter(a => (a.type === "jp" || a.type === "us") && (force || !values[assetKey(a)]));
+    const stockResults = await Promise.allSettled(missingStocks.map(async asset => [assetKey(asset), await fetchStockChange(asset)]));
     stockResults.forEach(result => { if (result.status === "fulfilled" && result.value[1]) values[result.value[0]] = result.value[1]; });
     if (Object.keys(values).length) saveCache(values);
     return values;
@@ -131,10 +137,7 @@
   function queueDecorate() {
     if (decorateQueued) return;
     decorateQueued = true;
-    requestAnimationFrame(() => {
-      decorateQueued = false;
-      decorateCards();
-    });
+    requestAnimationFrame(() => { decorateQueued = false; decorateCards(); });
   }
 
   function observePortfolio() {
@@ -145,26 +148,25 @@
     queueDecorate();
   }
 
-  async function refresh() {
+  async function refresh(options = {}) {
     currentValues = readCache();
     observePortfolio();
     queueDecorate();
     try {
-      const values = await loadChanges();
-      currentValues = values;
-    } catch (error) {
-      console.warn("前日比表示エラー", error);
-    }
+      currentValues = await loadChanges(options);
+      window.dispatchEvent(new CustomEvent("bitcoin1070:daily-changes-updated", { detail: { values: currentValues } }));
+    } catch (error) { console.warn("前日比表示エラー", error); }
     queueDecorate();
+    return currentValues;
   }
 
+  window.Bitcoin1070DailyChange = { refresh, readCache, assetKey, coinGeckoIdFor };
   document.addEventListener("DOMContentLoaded", () => {
     observePortfolio();
     refresh();
     let tries = 0;
     const waitForList = setInterval(() => {
-      observePortfolio();
-      queueDecorate();
+      observePortfolio(); queueDecorate();
       if (observer || ++tries >= 40) clearInterval(waitForList);
     }, 250);
   });

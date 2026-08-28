@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v14.0 - Home Decision Center UI
+// Bitcoin1070 PRO v14.2 - Home Decision Center UI
 (() => {
   'use strict';
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,4 +12,5 @@
   }
   document.addEventListener('DOMContentLoaded',()=>{ render(); setTimeout(render,1200); setTimeout(render,3500); });
   window.addEventListener('bitcoin1070:prices-updated',render);
+  window.addEventListener('bitcoin1070:daily-changes-updated',render);
 })();
