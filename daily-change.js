@@ -24,16 +24,11 @@
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), values })); } catch (_) {}
   }
 
-  async function fetchCryptoChanges(list) {
-    const ids = [...new Set(list.map(coinGeckoIdFor).filter(Boolean))];
-    if (!ids.length) return {};
-    const response = await fetch(`${API}?mode=crypto&ids=${encodeURIComponent(ids.join(","))}`, { cache: "no-store" });
-    if (!response.ok) throw new Error(`crypto daily change HTTP ${response.status}`);
-    const data = await response.json();
+  function cryptoRowsToChanges(list, rows) {
     const out = {};
     list.forEach(asset => {
       const id = coinGeckoIdFor(asset);
-      const row = data?.prices?.[id];
+      const row = rows?.[id];
       const percent = validNumber(row?.jpy_24h_change);
       const current = validNumber(row?.jpy);
       if (percent === null) return;
@@ -41,6 +36,31 @@
       out[assetKey(asset)] = { percent, amount: previous && current !== null ? current - previous : null, basis: "24h" };
     });
     return out;
+  }
+
+  async function fetchCryptoChanges(list) {
+    const ids = [...new Set(list.map(coinGeckoIdFor).filter(Boolean))];
+    if (!ids.length) return {};
+    let apiError = null;
+    try {
+      const response = await fetch(`${API}?mode=crypto&ids=${encodeURIComponent(ids.join(","))}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`crypto daily change HTTP ${response.status}`);
+      const data = await response.json();
+      const changes = cryptoRowsToChanges(list, data?.prices || data);
+      if (Object.keys(changes).length) return changes;
+      throw new Error("crypto API returned no 24h change values");
+    } catch (error) {
+      apiError = error;
+      console.warn("Bitcoin1070 APIの24時間比取得失敗。CoinGeckoへフォールバックします。", error);
+    }
+
+    const directUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=jpy&include_24hr_change=true`;
+    const directResponse = await fetch(directUrl, { cache: "no-store" });
+    if (!directResponse.ok) throw apiError || new Error(`CoinGecko HTTP ${directResponse.status}`);
+    const directData = await directResponse.json();
+    const directChanges = cryptoRowsToChanges(list, directData);
+    if (!Object.keys(directChanges).length) throw apiError || new Error("CoinGecko returned no 24h change values");
+    return directChanges;
   }
 
   function yahooSymbolFor(asset) {
