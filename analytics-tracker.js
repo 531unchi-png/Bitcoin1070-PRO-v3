@@ -1,0 +1,16 @@
+// Bitcoin1070 PRO v16.4 - analytics foundation
+(()=>{'use strict';
+const VERSION='16.4',KEY='bitcoin1070_analytics_v1',SESSION='bitcoin1070_analytics_session_v1',MAX_EVENTS=1500;
+const now=()=>Date.now(),day=t=>new Date(t).toISOString().slice(0,10),page=()=>location.pathname.split('/').pop()||'index.html';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{"events":[]}')}catch(_){return{events:[]}}}
+function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(_){}}
+function sessionId(){let id=sessionStorage.getItem(SESSION);if(!id){id=`s_${now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;sessionStorage.setItem(SESSION,id)}return id}
+function source(){const p=new URLSearchParams(location.search),utm=p.get('utm_source');if(utm)return utm.slice(0,40);try{if(!document.referrer)return'direct';const u=new URL(document.referrer);if(u.origin===location.origin)return'internal';return u.hostname.replace(/^www\./,'').slice(0,60)}catch(_){return'unknown'}}
+function device(){const ua=navigator.userAgent||'';if(/iPhone|iPad|iPod/.test(ua))return'iOS';if(/Android/.test(ua))return'Android';return'Desktop'}
+function track(name,meta={}){const s=load(),e={name:String(name).slice(0,50),ts:now(),day:day(now()),page:page(),session:sessionId(),source:source(),device:device(),meta:{}};Object.entries(meta||{}).slice(0,8).forEach(([k,v])=>{if(['string','number','boolean'].includes(typeof v))e.meta[String(k).slice(0,30)]=String(v).slice(0,100)});s.events=(s.events||[]).concat(e).slice(-MAX_EVENTS);save(s);window.dispatchEvent(new CustomEvent('bitcoin1070:analytics-event',{detail:e}));return e}
+function summary(days=30){const cutoff=now()-Math.max(1,Number(days)||30)*86400000,events=(load().events||[]).filter(e=>e.ts>=cutoff),views=events.filter(e=>e.name==='page_view'),sessions=new Set(views.map(e=>e.session)),pages={},features={},sources={},devices={};views.forEach(e=>{pages[e.page]=(pages[e.page]||0)+1;sources[e.source]=(sources[e.source]||0)+1;devices[e.device]=(devices[e.device]||0)+1});events.filter(e=>e.name==='feature_use').forEach(e=>{const n=e.meta?.feature||'unknown';features[n]=(features[n]||0)+1});return{days,events:events.length,pageViews:views.length,sessions:sessions.size,pages,features,sources,devices,firstEvent:events[0]?.ts||null,lastEvent:events.at(-1)?.ts||null}}
+function exportData(){return{version:VERSION,generatedAt:new Date().toISOString(),summary:summary(30),events:load().events||[]}}
+function clear(){localStorage.removeItem(KEY)}
+function bind(){track('page_view');document.addEventListener('click',ev=>{const a=ev.target.closest('a,button');if(!a)return;const href=a.getAttribute('href')||'',text=(a.textContent||'').trim().replace(/\s+/g,' ').slice(0,60);let feature=a.dataset.analyticsFeature||'';if(!feature){if(/cycle1070/.test(href))feature='btc1070';else if(/future-simulator/.test(href))feature='future_simulator';else if(/analysis/.test(href))feature='ai_analysis';else if(/doubling-navi/.test(href))feature='doubling_navi';else if(/transactions/.test(href))feature='transactions';else if(/portfolio/.test(href))feature='portfolio'}if(feature)track('feature_use',{feature,action:text||href})},{passive:true})}
+document.addEventListener('DOMContentLoaded',bind,{once:true});window.Bitcoin1070Analytics={track,summary,exportData,clear,version:VERSION};
+})();
