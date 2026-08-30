@@ -1,5 +1,5 @@
-// Bitcoin1070 PRO Service Worker v16.5 build4
-const CACHE_NAME='bitcoin1070-pro-v16-5-build4';
+// Bitcoin1070 PRO Service Worker v16.5 build5
+const CACHE_NAME='bitcoin1070-pro-v16-5-build5';
 const CORE_FILES=['./','./index.html','./cycle1070.html','./settings.html','./analytics-dashboard.html','./style.css?v=15.0','./app-shell.js?v=16.5','./analytics-tracker.js?v=16.4','./cloud-analytics.js?v=16.5','./analytics-cloud-status.js?v=16.5','./analytics-dashboard.js?v=16.4','./manifest.json?v=16.3.1','./icon-192.png','./icon-512.png'];
 const OPTIONAL_FILES=['./portfolio.html','./market.html','./analysis.html','./portfolio-edit.html','./asset-intelligence.html','./future-simulator.html','./investment-os-data.js?v=16.2.1','./professional-ai.js?v=16.2.1','./investment-os.js?v=16.2.1','./investment-os-ui.js?v=16.2.1','./btc1070-intelligence.js?v=16.3.1'];
 const FORCED=new Map([['/app-shell.js','./app-shell.js?v=16.5'],['/analytics-tracker.js','./analytics-tracker.js?v=16.4'],['/cloud-analytics.js','./cloud-analytics.js?v=16.5'],['/analytics-cloud-status.js','./analytics-cloud-status.js?v=16.5'],['/analytics-dashboard.js','./analytics-dashboard.js?v=16.4'],['/investment-os-data.js','./investment-os-data.js?v=16.2.1'],['/professional-ai.js','./professional-ai.js?v=16.2.1'],['/investment-os.js','./investment-os.js?v=16.2.1'],['/investment-os-ui.js','./investment-os-ui.js?v=16.2.1'],['/btc1070-intelligence.js','./btc1070-intelligence.js?v=16.3.1']]);
