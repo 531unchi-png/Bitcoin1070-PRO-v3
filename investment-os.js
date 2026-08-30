@@ -14,13 +14,19 @@
     const quality=data.quality(asset);
     if(!factor) return null;
     const confidence=Math.round(clamp((factor.confidence?.score||0)*.65+quality.score*.35));
+    const missing=(quality.missing||[]).filter(Boolean);
+    const stale=(quality.stale||[]).filter(Boolean);
+    const provisional=confidence<55;
     let action='様子見';
-    if(confidence<55) action='データ待ち';
+    if(provisional) action='暫定評価';
     else if(anomaly?.level==='high') action='異常値動きを確認';
     else if(opportunity?.score>=78&&factor.score>=48) action='買い場を精査';
     else if(factor.score>=72) action='強気継続を監視';
     else if(factor.score<=34) action='縮小・撤退条件を確認';
-    return {asset,factor,opportunity,anomaly,plan,quality,confidence,action};
+    const statusDetail=provisional
+      ? (missing.length?`不足: ${missing.join(' / ')}`:stale.length?`更新待ち: ${stale.join(' / ')}`:'判断材料が不足しているため暫定評価')
+      : (stale.length?`一部更新待ち: ${stale.join(' / ')}`:'主要データ取得済み');
+    return {asset,factor,opportunity,anomaly,plan,quality,confidence,action,provisional,missing,stale,statusDetail};
   }
 
   function priority(row){
@@ -50,10 +56,10 @@
       risk,
       dataQuality:avgQuality,
       generatedAt:Date.now(),
-      disclaimer:'評価点・買い場スコア・データ品質は判断補助指標であり、将来の上昇確率ではありません。'
+      disclaimer:'評価点・買い場スコア・データ品質は判断補助指標であり、将来の上昇確率ではありません。暫定評価は不足データを含むため売買判断を確定しないでください。'
     };
   }
 
-  window.Bitcoin1070InvestmentOS={model,commander,version:'16.0'};
+  window.Bitcoin1070InvestmentOS={model,commander,version:'16.0.1'};
   window.dispatchEvent(new CustomEvent('bitcoin1070:investment-os-ready'));
 })();
