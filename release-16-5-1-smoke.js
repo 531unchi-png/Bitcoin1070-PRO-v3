@@ -1,2 +1,0 @@
-// Manual browser-console smoke helper for v16.5.1. No app state is modified.
-(()=>{const expected='16.5.1';const results={brand:[...document.querySelectorAll('.app-brand span')].every(el=>el.textContent.trim()===`v${expected}`),title:!document.title.includes('Bitcoin1070 PRO v')||document.title.includes(`Bitcoin1070 PRO v${expected}`),shell:window.Bitcoin1070CloudAnalytics?.version==='16.5'||!!window.Bitcoin1070CloudAnalytics};console.table(results);return results})();
