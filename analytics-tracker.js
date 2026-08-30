@@ -1,6 +1,7 @@
 // Bitcoin1070 PRO v16.4 - analytics foundation
 (()=>{'use strict';
-const VERSION='16.4',KEY='bitcoin1070_analytics_v1',SESSION='bitcoin1070_analytics_session_v1',MAX_EVENTS=1500;
+if(window.Bitcoin1070Analytics?.version==='16.4')return;
+const VERSION='16.4',KEY='bitcoin1070_analytics_v1',SESSION='bitcoin1070_analytics_session_v1',BOUND='bitcoin1070_analytics_bound_v1',MAX_EVENTS=1500;
 const now=()=>Date.now(),day=t=>new Date(t).toISOString().slice(0,10),page=()=>location.pathname.split('/').pop()||'index.html';
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{"events":[]}')}catch(_){return{events:[]}}}
 function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(_){}}
@@ -11,6 +12,6 @@ function track(name,meta={}){const s=load(),e={name:String(name).slice(0,50),ts:
 function summary(days=30){const cutoff=now()-Math.max(1,Number(days)||30)*86400000,events=(load().events||[]).filter(e=>e.ts>=cutoff),views=events.filter(e=>e.name==='page_view'),sessions=new Set(views.map(e=>e.session)),pages={},features={},sources={},devices={};views.forEach(e=>{pages[e.page]=(pages[e.page]||0)+1;sources[e.source]=(sources[e.source]||0)+1;devices[e.device]=(devices[e.device]||0)+1});events.filter(e=>e.name==='feature_use').forEach(e=>{const n=e.meta?.feature||'unknown';features[n]=(features[n]||0)+1});return{days,events:events.length,pageViews:views.length,sessions:sessions.size,pages,features,sources,devices,firstEvent:events[0]?.ts||null,lastEvent:events.at(-1)?.ts||null}}
 function exportData(){return{version:VERSION,generatedAt:new Date().toISOString(),summary:summary(30),events:load().events||[]}}
 function clear(){localStorage.removeItem(KEY)}
-function bind(){track('page_view');document.addEventListener('click',ev=>{const a=ev.target.closest('a,button');if(!a)return;const href=a.getAttribute('href')||'',text=(a.textContent||'').trim().replace(/\s+/g,' ').slice(0,60);let feature=a.dataset.analyticsFeature||'';if(!feature){if(/cycle1070/.test(href))feature='btc1070';else if(/future-simulator/.test(href))feature='future_simulator';else if(/analysis/.test(href))feature='ai_analysis';else if(/doubling-navi/.test(href))feature='doubling_navi';else if(/transactions/.test(href))feature='transactions';else if(/portfolio/.test(href))feature='portfolio'}if(feature)track('feature_use',{feature,action:text||href})},{passive:true})}
-document.addEventListener('DOMContentLoaded',bind,{once:true});window.Bitcoin1070Analytics={track,summary,exportData,clear,version:VERSION};
+function bind(){if(sessionStorage.getItem(BOUND)===page())return;sessionStorage.setItem(BOUND,page());track('page_view');document.addEventListener('click',ev=>{const a=ev.target.closest('a,button');if(!a)return;const href=a.getAttribute('href')||'',text=(a.textContent||'').trim().replace(/\s+/g,' ').slice(0,60);let feature=a.dataset.analyticsFeature||'';if(!feature){if(/cycle1070/.test(href))feature='btc1070';else if(/future-simulator/.test(href))feature='future_simulator';else if(/analysis/.test(href))feature='ai_analysis';else if(/doubling-navi/.test(href))feature='doubling_navi';else if(/transactions/.test(href))feature='transactions';else if(/portfolio/.test(href))feature='portfolio'}if(feature)track('feature_use',{feature,action:text||href})},{passive:true})}
+window.Bitcoin1070Analytics={track,summary,exportData,clear,version:VERSION};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
