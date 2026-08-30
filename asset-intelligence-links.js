@@ -1,0 +1,6 @@
+// Bitcoin1070 PRO v16.0 - Portfolio -> Asset Intelligence links
+(()=>{'use strict';
+function esc(v){return encodeURIComponent(String(v??''))}
+function attach(){const list=document.getElementById('portfolioList');if(!list)return;const rows=window.Bitcoin1070DecisionCenter?.holdings?.()||[];const cards=[...list.querySelectorAll('.asset-card')];cards.forEach(card=>{if(card.querySelector('.asset-intel-link'))return;const text=(card.textContent||'').toUpperCase();const asset=rows.find(a=>a.type!=='cash'&&text.includes(String(a.symbol||'').toUpperCase()));if(!asset)return;const a=document.createElement('a');a.className='inline-card-link asset-intel-link';a.href=`asset-intelligence.html?type=${esc(asset.type)}&symbol=${esc(asset.symbol)}`;a.textContent='🧠 AI詳細・買い場・売買水準を見る →';card.appendChild(a)})}
+const observer=new MutationObserver(()=>attach());document.addEventListener('DOMContentLoaded',()=>{attach();const list=document.getElementById('portfolioList');if(list)observer.observe(list,{childList:true,subtree:true});setTimeout(attach,1200)});window.addEventListener('bitcoin1070:daily-changes-updated',attach);
+})();
