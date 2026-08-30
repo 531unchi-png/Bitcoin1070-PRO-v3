@@ -1,122 +1,14 @@
-// Bitcoin1070 PRO v16.0 - Investment OS unified data layer
-(()=>{
-  'use strict';
-
-  const DAILY_KEYS=['bitcoin1070_daily_changes_v14_0','bitcoin1070_daily_changes_v13_1'];
-  const SIX_HOURS=6*60*60*1000;
-  const technical=new Map();
-
-  const numberOrNull=value=>{
-    if(value===null||value===undefined||value==='') return null;
-    const n=Number(value);
-    return Number.isFinite(n)?n:null;
-  };
-
-  const assetKey=asset=>`${asset?.type||''}:${String(asset?.symbol||'').trim().toUpperCase()}`;
-
-  function readDailySnapshot(){
-    for(const key of DAILY_KEYS){
-      try{
-        const parsed=JSON.parse(localStorage.getItem(key)||'null');
-        if(parsed?.values){
-          return {
-            values:parsed.values,
-            updatedAt:numberOrNull(parsed.updatedAt??parsed.timestamp??parsed.savedAt),
-            storageKey:key
-          };
-        }
-      }catch(_){ }
-    }
-    return {values:{},updatedAt:null,storageKey:null};
-  }
-
-  function ingestTechnical(result){
-    const asset=result?.asset;
-    if(!asset) return false;
-    technical.set(assetKey(asset),{...result,observedAt:Date.now()});
-    window.dispatchEvent(new CustomEvent('bitcoin1070:data-layer-updated',{detail:{kind:'technical',assetKey:assetKey(asset)}}));
-    return true;
-  }
-
-  function getTechnical(asset){
-    const value=technical.get(assetKey(asset));
-    if(!value) return null;
-    if(Date.now()-value.observedAt>SIX_HOURS) return {...value,stale:true};
-    return {...value,stale:false};
-  }
-
-  function dailyChange(asset){
-    const center=window.Bitcoin1070DecisionCenter;
-    const snapshot=readDailySnapshot();
-    const key=center?.keyOf?.(asset)??assetKey(asset);
-    const row=snapshot.values?.[key]??null;
-    const percent=numberOrNull(row?.percent);
-    const age=snapshot.updatedAt?Date.now()-snapshot.updatedAt:null;
-    return {
-      percent,
-      label:asset?.type==='crypto'?'24時間比':'前日比',
-      status:percent===null?'missing':age!==null&&age>SIX_HOURS?'stale':'live',
-      updatedAt:snapshot.updatedAt,
-      source:row?.source??snapshot.storageKey??null
-    };
-  }
-
-  function price(asset){
-    const center=window.Bitcoin1070DecisionCenter;
-    const value=numberOrNull(center?.priceOf?.(asset));
-    return {value,status:value===null?'missing':'live'};
-  }
-
-  function quality(asset){
-    const checks=[];
-    const p=price(asset);
-    const d=dailyChange(asset);
-    const t=getTechnical(asset);
-    checks.push({name:'価格',status:p.status,weight:.32});
-    checks.push({name:d.label,status:d.status,weight:.22});
-    checks.push({name:'テクニカル',status:t?t.stale?'stale':'live':'missing',weight:.34});
-    if(asset?.type==='crypto'&&String(asset?.symbol).toUpperCase()==='BTC'){
-      let cycle=null;
-      try{cycle=window.Bitcoin1070Cycle?.snapshot?.()}catch(_){ }
-      checks.push({name:'1070日サイクル',status:cycle?'live':'missing',weight:.12});
-    }else{
-      checks.push({name:'保有情報',status:asset?'live':'missing',weight:.12});
-    }
-    const weight=checks.reduce((sum,item)=>sum+item.weight,0)||1;
-    const points=checks.reduce((sum,item)=>sum+item.weight*(item.status==='live'?1:item.status==='stale'?.55:0),0);
-    const score=Math.round(points/weight*100);
-    return {
-      score,
-      label:score>=85?'高':score>=65?'中':'低',
-      checks,
-      missing:checks.filter(item=>item.status==='missing').map(item=>item.name),
-      stale:checks.filter(item=>item.status==='stale').map(item=>item.name)
-    };
-  }
-
-  function snapshot(asset){
-    return {
-      asset,
-      key:assetKey(asset),
-      price:price(asset),
-      change:dailyChange(asset),
-      technical:getTechnical(asset),
-      quality:quality(asset),
-      observedAt:Date.now()
-    };
-  }
-
-  window.Bitcoin1070DataLayer={
-    assetKey,
-    numberOrNull,
-    readDailySnapshot,
-    dailyChange,
-    price,
-    ingestTechnical,
-    getTechnical,
-    quality,
-    snapshot,
-    version:'16.0'
-  };
-  window.dispatchEvent(new CustomEvent('bitcoin1070:data-layer-ready'));
-})();
+// Bitcoin1070 PRO v16.2 - Investment OS strict data quality layer
+(()=>{'use strict';
+const DAILY_KEYS=['bitcoin1070_daily_changes_v14_0','bitcoin1070_daily_changes_v13_1'],technical=new Map(),HOUR=3600000,DAILY_MAX=asset=>asset?.type==='crypto'?2*HOUR:18*HOUR,TECH_MAX=6*HOUR;
+const numberOrNull=v=>{if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null};const assetKey=a=>`${a?.type||''}:${String(a?.symbol||'').trim().toUpperCase()}`;
+function readDailySnapshot(){for(const key of DAILY_KEYS){try{const p=JSON.parse(localStorage.getItem(key)||'null');if(p?.values)return{values:p.values,updatedAt:numberOrNull(p.updatedAt??p.timestamp??p.savedAt),storageKey:key}}catch(_){}}return{values:{},updatedAt:null,storageKey:null}}
+function ingestTechnical(r){if(!r?.asset)return false;technical.set(assetKey(r.asset),{...r,observedAt:Date.now()});window.dispatchEvent(new CustomEvent('bitcoin1070:data-layer-updated',{detail:{kind:'technical',assetKey:assetKey(r.asset)}}));return true}
+function getTechnical(a){const v=technical.get(assetKey(a));if(!v)return null;const age=Date.now()-v.observedAt;return{...v,ageMs:age,stale:age>TECH_MAX}}
+function dailyChange(a){const center=window.Bitcoin1070DecisionCenter,s=readDailySnapshot(),key=center?.keyOf?.(a)??assetKey(a),row=s.values?.[key]??null,percent=numberOrNull(row?.percent),rowAt=numberOrNull(row?.updatedAt??row?.timestamp??row?.observedAt),updatedAt=rowAt??s.updatedAt,age=updatedAt?Date.now()-updatedAt:null;return{percent,label:a?.type==='crypto'?'24時間比':'前日比',status:percent===null?'missing':age===null?'unknown':age>DAILY_MAX(a)?'stale':'live',updatedAt,ageMs:age,source:row?.source??s.storageKey??null}}
+function price(a){const center=window.Bitcoin1070DecisionCenter,value=numberOrNull(center?.priceOf?.(a));return{value,status:value===null||value<=0?'missing':'live'}}
+function volumeCheck(t){const latest=numberOrNull(t?.volume?.latest),avg=numberOrNull(t?.volume?.average20),ratio=numberOrNull(t?.volume?.ratio);return latest!==null&&avg!==null&&avg>0&&ratio!==null?'live':'missing'}
+function technicalCheck(t){if(!t)return'missing';if(t.stale)return'stale';const required=[t.rsi,t.ma25,t.ma75,t.macd?.histogram,t.atr,t.levels?.support,t.levels?.resistance];return required.every(v=>numberOrNull(v)!==null)?'live':'partial'}
+function quality(a){const p=price(a),d=dailyChange(a),t=getTechnical(a),tc=technicalCheck(t),vc=volumeCheck(t),checks=[{name:'価格',status:p.status,weight:.20},{name:d.label,status:d.status,weight:.20},{name:'テクニカル',status:tc,weight:.30},{name:'出来高',status:vc,weight:.15},{name:'更新時刻',status:d.updatedAt&&t?.observedAt?(d.status==='live'&&!t.stale?'live':'stale'):'missing',weight:.15}];const factor={live:1,stale:.45,partial:.35,unknown:.25,missing:0},points=checks.reduce((s,x)=>s+x.weight*(factor[x.status]??0),0),score=Math.round(points*100),allLive=checks.every(x=>x.status==='live'),finalScore=allLive?100:Math.min(99,score);return{score:finalScore,label:finalScore===100?'完全':finalScore>=85?'高':finalScore>=65?'中':'低',checks,missing:checks.filter(x=>['missing','partial','unknown'].includes(x.status)).map(x=>x.name),stale:checks.filter(x=>x.status==='stale').map(x=>x.name),updatedAt:{daily:d.updatedAt??null,technical:t?.observedAt??null},strict:true}}
+function snapshot(a){return{asset:a,key:assetKey(a),price:price(a),change:dailyChange(a),technical:getTechnical(a),quality:quality(a),observedAt:Date.now()}}
+window.Bitcoin1070DataLayer={assetKey,numberOrNull,readDailySnapshot,dailyChange,price,ingestTechnical,getTechnical,quality,snapshot,version:'16.2'};window.dispatchEvent(new CustomEvent('bitcoin1070:data-layer-ready'))})();
