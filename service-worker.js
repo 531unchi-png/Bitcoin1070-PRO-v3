@@ -1,8 +1,8 @@
-// Bitcoin1070 PRO Service Worker v16.2.1 build2
-const CACHE_NAME='bitcoin1070-pro-v16-2-1-build2';
-const CORE_FILES=['./','./index.html','./style.css?v=15.0','./app-shell.js?v=16.2.1','./manifest.json?v=16.2','./icon-192.png','./icon-512.png'];
-const OPTIONAL_FILES=['./portfolio.html','./asset-intelligence.html','./portfolio.js?v=15.0','./daily-change.js?v=14.2.4','./decision-center.js?v=16.1.2','./investment-os-data.js?v=16.2','./professional-ai.js?v=16.2.1','./investment-os.js?v=16.2','./investment-os-ui.js?v=16.2','./technical.js?v=16.0.2','./technical-autoload.js?v=16.0.2','./btc1070-intelligence.js?v=16.0','./opportunity-radar.js?v=16.0'];
-const FORCED={'/app-shell.js':'./app-shell.js?v=16.2.1','/investment-os-data.js':'./investment-os-data.js?v=16.2','/professional-ai.js':'./professional-ai.js?v=16.2.1','/investment-os.js':'./investment-os.js?v=16.2','/investment-os-ui.js':'./investment-os-ui.js?v=16.2','/daily-change.js':'./daily-change.js?v=14.2.4','/decision-center.js':'./decision-center.js?v=16.1.2'};
+// Bitcoin1070 PRO Service Worker v16.2.1 build3
+const CACHE_NAME='bitcoin1070-pro-v16-2-1-build3';
+const CORE_FILES=['./','./index.html','./style.css?v=15.0','./app-shell.js?v=16.2.1','./manifest.json?v=16.2.1','./icon-192.png','./icon-512.png'];
+const OPTIONAL_FILES=['./portfolio.html','./asset-intelligence.html','./portfolio.js?v=15.0','./daily-change.js?v=14.2.4','./decision-center.js?v=16.1.2','./investment-os-data.js?v=16.2.1','./professional-ai.js?v=16.2.1','./investment-os.js?v=16.2.1','./investment-os-ui.js?v=16.2.1','./technical.js?v=16.0.2','./technical-autoload.js?v=16.0.2','./btc1070-intelligence.js?v=16.0','./opportunity-radar.js?v=16.0'];
+const FORCED={'/app-shell.js':'./app-shell.js?v=16.2.1','/investment-os-data.js':'./investment-os-data.js?v=16.2.1','/professional-ai.js':'./professional-ai.js?v=16.2.1','/investment-os.js':'./investment-os.js?v=16.2.1','/investment-os-ui.js':'./investment-os-ui.js?v=16.2.1','/daily-change.js':'./daily-change.js?v=14.2.4','/decision-center.js':'./decision-center.js?v=16.1.2'};
 self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(CACHE_NAME);await cache.addAll(CORE_FILES);await Promise.allSettled(OPTIONAL_FILES.map(async file=>{try{const response=await fetch(file,{cache:'reload'});if(response.ok)await cache.put(file,response)}catch(_){}}))})());self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const names=await caches.keys();await Promise.all(names.filter(name=>name!==CACHE_NAME).map(name=>caches.delete(name)));await self.clients.claim()})())});
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});
