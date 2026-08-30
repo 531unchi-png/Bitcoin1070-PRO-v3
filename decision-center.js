@@ -1,4 +1,4 @@
-// Bitcoin1070 PRO v16.0 - Daily Decision Center core
+// Bitcoin1070 PRO v16.1.1 - Daily Decision Center core
 (() => {
   'use strict';
   const KEYS={plans:'bitcoin1070_trade_plans_v14',alerts:'bitcoin1070_alert_rules_v14'};
@@ -19,5 +19,5 @@
   function plans(){return read(KEYS.plans,{})}function savePlan(assetKey,plan){const all=plans();all[assetKey]={...plan,updatedAt:new Date().toISOString()};return write(KEYS.plans,all)}function alerts(){return read(KEYS.alerts,[])}function saveAlerts(rules){return write(KEYS.alerts,Array.isArray(rules)?rules:[])}function evaluateAlerts(prices={}){return alerts().filter(r=>{const p=num(prices[r.assetKey]),t=num(r.target);if(p===null||t===null||!r.enabled)return false;return r.operator==='>='?p>=t:p<=t})}
   function dailyValues(){for(const key of ['bitcoin1070_daily_changes_v14_0','bitcoin1070_daily_changes_v13_1']){try{const d=JSON.parse(localStorage.getItem(key)||'null');if(d?.values)return d.values}catch(_){}}return{}}
   function snapshot(){const daily=dailyValues(),signals=holdings().map(asset=>({asset,signal:signalFor(asset,daily[keyOf(asset)])})),h=health();return{signals,health:h,strategies:strategies(signals,h)}}
-  window.Bitcoin1070DecisionCenter={KEYS,keyOf,holdings,priceOf,valueOf,cashValue,signalFor,health,strategies,plans,savePlan,alerts,saveAlerts,evaluateAlerts,snapshot,version:'16.0'};
+  window.Bitcoin1070DecisionCenter={KEYS,keyOf,holdings,priceOf,valueOf,cashValue,signalFor,health,strategies,plans,savePlan,alerts,saveAlerts,evaluateAlerts,snapshot,version:'16.1.1'};
 })();
