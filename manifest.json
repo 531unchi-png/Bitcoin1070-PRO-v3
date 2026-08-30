@@ -1,7 +1,7 @@
 {
-  "name": "Bitcoin1070 PRO v16.2.1",
+  "name": "Bitcoin1070 PRO v16.3",
   "short_name": "Bitcoin1070",
-  "description": "1070日サイクル、資産管理、Investment OS AI司令塔、暴落チャンスレーダー、未来シミュレーションを統合した投資判断ダッシュボード",
+  "description": "1070日サイクル、BTC専用AI、資産管理、Investment OS AI司令塔、暴落チャンスレーダー、未来シミュレーションを統合した投資判断ダッシュボード",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
