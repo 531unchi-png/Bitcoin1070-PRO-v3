@@ -1,35 +1,5 @@
-// Bitcoin1070 PRO v16.0 - BTC 1070 Intelligence
-(()=>{
-'use strict';
-const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
-const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
-function evaluate(){
- const cycle=window.Bitcoin1070Cycle?.snapshot?.();
- const data=window.Bitcoin1070DataLayer;
- const pro=window.Bitcoin1070ProfessionalAI;
- const center=window.Bitcoin1070DecisionCenter;
- if(!cycle||!data||!pro||!center)return null;
- const btc=(center.holdings?.()||[]).find(a=>a.type==='crypto'&&String(a.symbol).toUpperCase()==='BTC')||{type:'crypto',symbol:'BTC'};
- const snap=data.snapshot(btc),factor=pro.factorScore(btc),opportunity=pro.crashRadar(btc),technical=snap.technical;
- const price=num(snap.price.value),change=num(snap.change.percent);
- let cycleScore=50;
- if(cycle.stage==='底候補ゾーン')cycleScore=82;
- else if(cycle.stage==='次サイクル上昇期')cycleScore=72;
- else if(cycle.stage==='次回ピーク候補')cycleScore=30;
- else if(cycle.stage==='下落・底探し')cycleScore=40;
- else if(cycle.stage==='天井形成候補')cycleScore=35;
- const halvingDays=num(cycle.halvingRemainingDays);
- let halvingScore=50;
- if(halvingDays!==null){if(halvingDays>=180&&halvingDays<=900)halvingScore=68;else if(halvingDays>=0&&halvingDays<180)halvingScore=60;else if(halvingDays<0&&halvingDays>=-540)halvingScore=70;}
- const techScore=num(technical?.score)??50;
- const momentumScore=change===null?50:clamp(50+change*5);
- const quality=snap.quality.score;
- const score=Math.round(cycleScore*.34+halvingScore*.16+techScore*.30+momentumScore*.20);
- const confidence=Math.round(clamp(quality*.55+(factor?.confidence?.score||0)*.45));
- const label=score>=70?'強気':score<=38?'弱気':'中立';
- const reasons=[`1070日局面: ${cycle.stage}`,`半減期まで ${halvingDays!==null?halvingDays+'日':'--'}`,`テクニカル ${Math.round(techScore)}/100`,`${snap.change.label} ${change===null?'--':(change>=0?'+':'')+change.toFixed(2)+'%'}`];
- return {asset:btc,price,score,label,confidence,quality,cycleScore,halvingScore,technicalScore:techScore,momentumScore,opportunity,cycle,reasons,updatedAt:Date.now(),note:'1070日モデルは歴史的パターンを使う仮説であり、将来価格を保証しません。'};
-}
-window.Bitcoin1070BTCIntelligence={evaluate,version:'16.0'};
-window.dispatchEvent(new CustomEvent('bitcoin1070:btc-intelligence-ready'));
-})();
+// Bitcoin1070 PRO v16.3 - BTC 1070 Intelligence
+(()=>{'use strict';
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
+function evaluate(){const cycle=window.Bitcoin1070Cycle?.snapshot?.(),data=window.Bitcoin1070DataLayer,pro=window.Bitcoin1070ProfessionalAI,center=window.Bitcoin1070DecisionCenter;if(!cycle||!data||!pro||!center)return null;const btc=(center.holdings?.()||[]).find(a=>a.type==='crypto'&&String(a.symbol).toUpperCase()==='BTC')||{type:'crypto',symbol:'BTC'};const snap=data.snapshot(btc),factor=pro.factorScore(btc),opportunity=pro.crashRadar(btc),technical=snap.technical,price=num(snap.price.value),change=num(snap.change.percent),rsi=num(technical?.rsi),macd=num(technical?.macd?.histogram),ma25=num(technical?.ma25),ma75=num(technical?.ma75),support=num(technical?.levels?.support),resistance=num(technical?.levels?.resistance),volume=num(technical?.volume?.ratio),atr=num(technical?.atr);let cycleScore=50;if(cycle.stage==='底候補ゾーン')cycleScore=82;else if(cycle.stage==='次サイクル上昇期')cycleScore=72;else if(cycle.stage==='次回ピーク候補')cycleScore=30;else if(cycle.stage==='下落・底探し')cycleScore=40;else if(cycle.stage==='天井形成候補')cycleScore=35;const halvingDays=num(cycle.halvingRemainingDays);let halvingScore=50;if(halvingDays!==null){if(halvingDays>=180&&halvingDays<=900)halvingScore=68;else if(halvingDays>=0&&halvingDays<180)halvingScore=60;else if(halvingDays<0&&halvingDays>=-540)halvingScore=70}const checks=[];if(rsi!==null)checks.push({name:'RSI',bull:rsi>=35&&rsi<=68,bear:rsi>=75||rsi<30,value:rsi});if(macd!==null)checks.push({name:'MACD',bull:macd>0,bear:macd<0,value:macd});if(ma25!==null&&ma75!==null)checks.push({name:'移動平均',bull:ma25>ma75,bear:ma25<ma75,value:ma25-ma75});if(price!==null&&ma25!==null)checks.push({name:'25日線',bull:price>=ma25,bear:price<ma25,value:price-ma25});if(volume!==null)checks.push({name:'出来高',bull:volume>=1,bear:volume<.65,value:volume});const bullConfirm=checks.filter(x=>x.bull).length,bearConfirm=checks.filter(x=>x.bear).length,techScore=checks.length?clamp(50+(bullConfirm-bearConfirm)*(50/checks.length)):50,momentumScore=change===null?50:clamp(50+change*4),quality=snap.quality.score,rawScore=Math.round(cycleScore*.34+halvingScore*.16+techScore*.30+momentumScore*.20),technicalReady=checks.length>=3&&!snap.quality.missing?.includes('テクニカル'),confidence=Math.round(clamp(quality*.55+(factor?.confidence?.score||0)*.30+(checks.length?Math.max(bullConfirm,bearConfirm)/checks.length*100:30)*.15));let label='中立';if(technicalReady&&confidence>=60&&rawScore>=70&&bullConfirm>=3)label='強気';else if(technicalReady&&confidence>=60&&rawScore<=38&&bearConfirm>=3)label='弱気';const stageRisk=cycle.stage==='底候補ゾーン'?'底候補帯は日付だけで底確定せず、反転確認を優先':cycle.stage==='次回ピーク候補'?'1070日前後でも天井確定ではなく過熱・失速を確認':cycle.stage==='下落・底探し'?'下落途中の可能性があるため一括買いを避ける':'サイクル仮説より実価格・需給・テクニカルを優先';const invalidation=[];if(label==='強気'){if(support!==null)invalidation.push(`終値が主要支持線 ${Math.round(support).toLocaleString('ja-JP')} を明確に下回る`);if(macd!==null)invalidation.push('MACDが再び弱気方向へ転換する');invalidation.push('1070日局面と価格トレンドの整合が崩れる')}else if(label==='弱気'){if(resistance!==null)invalidation.push(`終値が主要抵抗線 ${Math.round(resistance).toLocaleString('ja-JP')} を明確に上回る`);invalidation.push('複数テクニカルが強気へ反転する')}else invalidation.push('強気または弱気のテクニカル確認が3項目以上揃うまで確定判定しない');const reasons=[`1070日局面: ${cycle.stage} (${cycleScore}/100)`,`半減期まで ${halvingDays!==null?halvingDays+'日':'--'} (${halvingScore}/100)`,`テクニカル: 強気 ${bullConfirm}/${checks.length}・弱気 ${bearConfirm}/${checks.length}`,`${snap.change.label} ${change===null?'--':(change>=0?'+':'')+change.toFixed(2)+'%'}`,`データ取得品質 ${quality}/100`];return{asset:btc,price,score:rawScore,label,confidence,quality,cycleScore,halvingScore,technicalScore:Math.round(techScore),momentumScore:Math.round(momentumScore),technical:{checks,bullConfirm,bearConfirm,ready:technicalReady,rsi,macd,ma25,ma75,support,resistance,volume,atr},opportunity,cycle,reasons,invalidation,stageRisk,updatedAt:Date.now(),note:'1070日モデルは歴史的パターンを用いた仮説です。日付だけで底・天井を確定せず、価格・需給・テクニカルを優先します。'}}
+window.Bitcoin1070BTCIntelligence={evaluate,version:'16.3'};window.dispatchEvent(new CustomEvent('bitcoin1070:btc-intelligence-ready'))})();
