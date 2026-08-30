@@ -1,0 +1,2 @@
+// Bitcoin1070 PRO v16.5 - operator-facing cloud analytics status helper
+(()=>{'use strict';const VERSION='16.5';function read(){const api=window.Bitcoin1070CloudAnalytics;return api?.status?api.status():{version:VERSION,provider:'cloudflare-web-analytics',configured:false,enabled:false,loaded:false,error:'adapter_unavailable'}}function label(){const s=read();if(s.loaded)return'接続済み';if(s.configured&&s.enabled)return'接続処理中';if(s.error)return'接続エラー';return'未接続'}window.Bitcoin1070CloudAnalyticsStatus={version:VERSION,read,label};})();
