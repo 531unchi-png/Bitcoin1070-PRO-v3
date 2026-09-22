@@ -30,6 +30,7 @@ const CRYPTO_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 // キャッシュ読込関数から参照されるため、必ず先に宣言する
 let latestCryptoPricesUpdatedAt = null;
 let latestCryptoPrices = loadCachedCryptoPrices();
+let latestCryptoFreshSymbols = new Set();
 
 function loadCachedCryptoPrices() {
     try {
@@ -182,7 +183,7 @@ async function fetchCryptoPrices() {
         data = { prices: directData, fetchedAt: new Date().toISOString() };
     }
 
-    const nextPrices = { ...latestCryptoPrices };
+    const nextPrices = { ...latestCryptoPrices }, freshSymbols = new Set();
     cryptoAssets.forEach(asset => {
         const id = String(asset.coinGeckoId).trim().toLowerCase();
         const value = Number(data?.prices?.[id]?.jpy ?? data?.[id]?.jpy);
@@ -191,10 +192,12 @@ async function fetchCryptoPrices() {
             const idKey = String(asset.coinGeckoId || "").trim().toUpperCase();
             if (symbolKey) nextPrices[symbolKey] = value;
             if (idKey) nextPrices[idKey] = value;
+            if (symbolKey) freshSymbols.add(symbolKey);
         }
     });
 
     if (Object.keys(nextPrices).length === 0) throw new Error("有効な仮想通貨価格がありません");
+    latestCryptoFreshSymbols = freshSymbols;
     saveCryptoPrices(nextPrices, data?.fetchedAt);
     return nextPrices;
 }
@@ -644,6 +647,9 @@ function refreshPortfolio() {
         updatePortfolioAnalytics(evaluations);
 
     }
+    if (typeof updatePortfolioStrategy === "function") {
+        updatePortfolioStrategy(evaluations);
+    }
 }
 
 // =====================================
@@ -659,11 +665,12 @@ function setupBackupButton() {
     }
 
     button.addEventListener("click", () => {
-        try { requireDataManagement(); } catch (error) { alert(error.message); return; }
-        exportAppData(
-            assets,
-            transactionHistory
-        );
+        try {
+            requireDataManagement();
+            exportAppData(assets, transactionHistory);
+        } catch (error) {
+            alert("バックアップを作成できませんでした：" + error.message);
+        }
     });
 }
 
@@ -722,6 +729,13 @@ function setupRestoreButton() {
             if (restored.cashBalance !== null && restored.cashBalance !== undefined && typeof saveCashBalance === "function") {
                 saveCashBalance(restored.cashBalance);
             }
+            // Older backups have no daily valuation records or allocation preferences.
+            // Remove existing records so they cannot be mixed with the restored portfolio.
+            const snapshotKey=activeStorageKey(ASSET_SNAPSHOTS_KEY),limitsKey=activeStorageKey(STRATEGY_LIMITS_KEY);
+            if(restored.assetSnapshots.length)localStorage.setItem(snapshotKey,JSON.stringify(restored.assetSnapshots));
+            else localStorage.removeItem(snapshotKey);
+            if(restored.strategyLimits)localStorage.setItem(limitsKey,JSON.stringify(restored.strategyLimits));
+            else localStorage.removeItem(limitsKey);
 
             await loadMarketData();
 

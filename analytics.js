@@ -27,7 +27,7 @@ function loadAssetHistory() {
     try {
         const saved =
             localStorage.getItem(
-                ASSET_HISTORY_KEY
+                typeof activeStorageKey === "function" ? activeStorageKey(ASSET_HISTORY_KEY) : ASSET_HISTORY_KEY
             );
 
         if (!saved) {
@@ -68,7 +68,7 @@ function loadAssetHistory() {
 function saveAssetHistory(history) {
     try {
         localStorage.setItem(
-            ASSET_HISTORY_KEY,
+            typeof activeStorageKey === "function" ? activeStorageKey(ASSET_HISTORY_KEY) : ASSET_HISTORY_KEY,
             JSON.stringify(history)
         );
 
@@ -355,7 +355,7 @@ function drawCategoryChart(
 // =====================================
 
 function recordDailyAssetTotal(
-    totals
+    totals, complete = false
 ) {
     const today =
         getLocalDateKey();
@@ -394,6 +394,7 @@ function recordDailyAssetTotal(
 
         cash: Math.round(totals.cash),
 
+        complete,
         updatedAt:
             new Date()
                 .toISOString()
@@ -1016,9 +1017,19 @@ function updatePortfolioAnalytics(
         totals
     );
 
+    const cryptoFresh = evaluations.every(a => a.type !== "crypto" || Number(a.amount) <= 0 ||
+        (typeof latestCryptoFreshSymbols !== "undefined" &&
+         latestCryptoFreshSymbols.has(String(a.symbol || "").trim().toUpperCase()) &&
+         typeof latestCryptoPricesUpdatedAt !== "undefined" &&
+         Number.isFinite(Date.parse(latestCryptoPricesUpdatedAt)) &&
+         Date.now() >= Date.parse(latestCryptoPricesUpdatedAt) &&
+         Date.now() - Date.parse(latestCryptoPricesUpdatedAt) < 24 * 60 * 60 * 1000));
+    const complete = cryptoFresh && evaluations.every(a => Number(a.amount) <= 0 ||
+        (Number.isFinite(Number(a.currentPriceJpy)) && Number(a.currentPriceJpy) > 0 &&
+         Number.isFinite(Number(a.marketValueJpy))));
     const history =
         recordDailyAssetTotal(
-            totals
+            totals, complete
         );
 
     drawAssetHistoryChart(

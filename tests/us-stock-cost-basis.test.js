@@ -18,7 +18,7 @@ assert.equal(api.assetAcquisitionValueJpy(legacyNvda),423000);
 const restored=api.sanitizeAsset(legacyNvda);
 assert.equal(restored.costJpy,28200);
 assert.equal(restored.acquisitionUsdJpy,150);
-assert.equal(api.BACKUP_SCHEMA_VERSION,5);
+assert.equal(api.BACKUP_SCHEMA_VERSION,6);
 
 const marketValueJpy=15*200*155;
 const principal=api.assetAcquisitionValueJpy(restored);
