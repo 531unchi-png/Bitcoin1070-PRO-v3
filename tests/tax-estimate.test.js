@@ -9,6 +9,8 @@ test('taxable gains and losses offset; NISA does not offset taxable gains',()=>{
  assert.equal(result.taxableNet,80000);assert.equal(result.nisaNet,-300000);assert.equal(result.estimatedTax,16252);assert.equal(result.cryptoNet,40000);assert.equal(result.canEstimate,true);
 });
 test('unknown security account or taxable cost blocks estimate, crypto unknown basis does not',()=>{
+ assert.equal(calculate([],2026).estimatedTax,null);
+ assert.equal(calculate([sale('crypto',10000)],2026).estimatedTax,null);
  assert.equal(calculate([sale('jp',10000,'unknown')],2026).estimatedTax,null);
  assert.equal(calculate([sale('jp',null,'taxable')],2026).estimatedTax,null);
  const result=calculate([sale('jp',-2000,'taxable'),sale('crypto',null)],2026);
