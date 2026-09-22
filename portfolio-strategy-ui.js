@@ -35,6 +35,14 @@
     row.append(label, value); return row;
   }
   function renderAllocation(evaluations) {
+    const staleFunds = evaluations.filter(a => a.type === 'fund' && Number(a.amount) > 0 &&
+      (!Number.isFinite(Date.parse(`${a.navDate}T00:00:00Z`)) || Date.now() - Date.parse(`${a.navDate}T00:00:00Z`) > 8 * 86400000));
+    if (staleFunds.length) {
+      current = { ready: false, missing: staleFunds.map(a => a.symbol) };
+      $('strategyAllocationRows').replaceChildren(); $('strategySimulationResult').replaceChildren();
+      message('strategyAllocationNote', `投資信託 ${staleFunds.map(a => a.symbol).join('、')} の基準価額が古いため配分と試算を停止しています。資産編集で更新してください。`);
+      return;
+    }
     const cryptoAssets = evaluations.filter(a => a.type === 'crypto' && Number(a.amount) > 0);
     const cryptoTime = typeof latestCryptoPricesUpdatedAt !== 'undefined' ? Date.parse(latestCryptoPricesUpdatedAt) : NaN;
     const allFresh = typeof latestCryptoFreshSymbols !== 'undefined' && cryptoAssets.every(a =>

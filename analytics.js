@@ -131,6 +131,7 @@ function calculateCategoryTotals(
         crypto: 0,
         jp: 0,
         us: 0,
+        fund: 0,
         cash: (typeof loadCashBalance === "function" ? loadCashBalance() : 0),
         total: (typeof loadCashBalance === "function" ? loadCashBalance() : 0)
     };
@@ -160,6 +161,7 @@ function calculateCategoryTotals(
         ) {
             totals.us += value;
         }
+        if (asset.type === "fund") totals.fund += value;
     });
 
     return totals;
@@ -188,6 +190,7 @@ function renderCategoryTotals(
         );
 
     const cashElement = document.getElementById("cashTotal");
+    const fundElement = document.getElementById("fundTotal");
 
     if (cryptoElement) {
         cryptoElement.textContent =
@@ -209,6 +212,7 @@ function renderCategoryTotals(
     if (cashElement) {
         cashElement.textContent = formatYen(totals.cash);
     }
+    if (fundElement) fundElement.textContent = formatYen(totals.fund);
 }
 
 // =====================================
@@ -260,6 +264,7 @@ function drawCategoryChart(
         "仮想通貨",
         "日本株",
         "米国株",
+        "投資信託",
         "日本円"
     ];
 
@@ -271,6 +276,7 @@ function drawCategoryChart(
             totals.jp
         ),
         Math.round(totals.us),
+        Math.round(totals.fund),
         Math.round(totals.cash)
     ];
 
@@ -391,6 +397,7 @@ function recordDailyAssetTotal(
             Math.round(
                 totals.us
             ),
+        fund: Math.round(totals.fund),
 
         cash: Math.round(totals.cash),
 
@@ -508,6 +515,10 @@ function getSelectedSeriesInfo() {
         us: {
             key: "us",
             label: "米国株"
+        },
+        fund: {
+            key: "fund",
+            label: "投資信託"
         }
     };
 
@@ -1024,7 +1035,10 @@ function updatePortfolioAnalytics(
          Number.isFinite(Date.parse(latestCryptoPricesUpdatedAt)) &&
          Date.now() >= Date.parse(latestCryptoPricesUpdatedAt) &&
          Date.now() - Date.parse(latestCryptoPricesUpdatedAt) < 24 * 60 * 60 * 1000));
-    const complete = cryptoFresh && evaluations.every(a => Number(a.amount) <= 0 ||
+    const fundFresh = evaluations.every(a => a.type !== "fund" || Number(a.amount) <= 0 ||
+        (Number.isFinite(Date.parse(`${a.navDate}T00:00:00Z`)) &&
+         Date.now() - Date.parse(`${a.navDate}T00:00:00Z`) <= 8 * 86400000));
+    const complete = cryptoFresh && fundFresh && evaluations.every(a => Number(a.amount) <= 0 ||
         (Number.isFinite(Number(a.currentPriceJpy)) && Number(a.currentPriceJpy) > 0 &&
          Number.isFinite(Number(a.marketValueJpy))));
     const history =
