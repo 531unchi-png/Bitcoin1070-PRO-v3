@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05070b"><link rel="manifest" href="./manifest.json?v=17.3.1"><link rel="apple-touch-icon" href="./icon-512.png">
+<title>1070日検証ラボ | Bitcoin1070 PRO</title><link rel="stylesheet" href="./style.css?v=15.0"><link rel="stylesheet" href="./cycle-lab.css?v=1">
+</head><body><header class="app-header"><div class="app-brand">₿ Bitcoin1070 PRO</div><h1>🔬 1070日検証ラボ</h1><p>過去の実測と仮説を照合</p></header>
+<main class="container app-page cycle-lab-page"><a class="page-back-link" href="./cycle1070.html">← 1070日サイクルへ戻る</a>
+<section class="card"><span class="eyebrow">HYPOTHESIS AUDIT</span><h2>「底から1070日」を実測で確認</h2>
+<p>BTC/JPYの履歴から、期間内の最安終値と最高終値を選び、経過日数を計算します。探索期間は過去を見て定めたため、投資判断の検証成績ではありません。</p>
+<button type="button" id="labReload">↻ 履歴を再取得</button><p id="labStatus" role="status">読み込み中...</p>
+<small id="labSource">データを確認中</small><br><small id="labUpdated"></small></section>
+<section class="card"><h2>検証の要約</h2><div class="lab-stats"><div><span>完了した比較</span><strong id="labCount">—</strong></div><div><span>平均日付誤差</span><strong id="labError">—</strong></div><div><span>±90日の範囲</span><strong id="labHits">—</strong></div></div>
+<p class="lab-note">平均誤差は各期間の「実測日数 − 1070日」の絶対値の平均です。比較は最大2期間のみ。命中率や次の天井の確率として使えません。</p></section>
+<section class="card"><h2>サイクル別の実測</h2><div class="table-wrap lab-table-wrap"><table class="cycle-table lab-table"><thead><tr><th>期間</th><th>底の日付・終値</th><th>高値の日付・終値</th><th>底＋1070日</th><th>実測</th><th>1070日との差</th></tr></thead><tbody id="labRows"><tr><td colspan="6">履歴を確認中...</td></tr></tbody></table></div>
+<p id="labProvisional" class="lab-note"></p></section>
+<section class="card"><h2>読み方と限界</h2><ul class="plain-list">
+<li>価格はBTC/JPYの終値です。Yahoo Financeが利用可能なら週足、取得失敗時はCoinGeckoの約7日間隔です。日足の真の高値・安値とは異なります。</li>
+<li>固定の探索期間内で後から極値を選んでいます。いつ底を買えたか、事前にピークを予測できたかは検証していません。</li>
+<li>進行中の2022年底以降は高値が更新され得るため、平均誤差から除外します。2025年の「想定高値」を実測高値として扱いません。</li>
+<li>履歴の欠落が大きい期間は計算対象外にします。保存履歴を使うときは取得日時と価格の古さを表示します。</li>
+<li>データ元: <a href="https://finance.yahoo.com/quote/BTC-JPY/history/" rel="noopener noreferrer" target="_blank">Yahoo Finance</a> / <a href="https://www.coingecko.com/en/coins/bitcoin/historical_data" rel="noopener noreferrer" target="_blank">CoinGecko</a>。どちらも既存のBitcoin1070 API経由で取得します。</li>
+</ul></section></main><nav class="bottom-nav" aria-label="メインメニュー"><a href="./index.html"><span>⌂</span><small>ホーム</small></a><a href="./market.html"><span>📈</span><small>相場</small></a><a href="./portfolio.html"><span>💼</span><small>資産</small></a><a href="./news.html"><span>📰</span><small>情報</small></a><a href="./settings.html"><span>⚙️</span><small>設定</small></a></nav>
+<script src="./cycle-lab-core.js?v=1"></script><script src="./cycle-lab.js?v=1"></script><script src="./app-shell.js?v=17.3.1"></script></body></html>
