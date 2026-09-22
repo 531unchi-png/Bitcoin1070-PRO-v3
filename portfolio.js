@@ -127,6 +127,7 @@ function getProfitClass(value) {
 }
 
 function getTypeLabel(type) {
+    if (type === "fund") return "🌐 投資信託";
     if (type === "crypto") {
         return "🪙 仮想通貨";
     }
@@ -224,6 +225,9 @@ function evaluateAssets() {
         } else if (asset.type === "us") {
             currentPrice=Number(stocks[String(asset.symbol||"").trim().toUpperCase()])||0; currentPriceJpy=(currentPrice>0&&usdJpy>0)?currentPrice*usdJpy:0;
             acquisitionValueJpy=assetAcquisitionValueJpy(asset);
+        } else if (asset.type === "fund") {
+            currentPrice=Number(asset.navJpy)||0; currentPriceJpy=currentPrice>0?currentPrice/10000:0;
+            acquisitionValueJpy=assetAcquisitionValueJpy(asset);
         }
         const marketValueJpy=amount*currentPriceJpy;
         const profitJpy=(acquisitionValueJpy!==null && currentPriceJpy>0)?marketValueJpy-acquisitionValueJpy:null;
@@ -261,9 +265,9 @@ function renderTotalAsset(evaluations) {
     const profitElement=document.getElementById("totalProfit"),principalElement=document.getElementById("totalPrincipal");
     if(profitElement){profitElement.textContent=`${totalProfit>=0?"+":""}${formatYen(totalProfit)}（${formatPercent(totalProfitRate)}）`;profitElement.className=getProfitClass(totalProfit);}
     if(principalElement)principalElement.textContent=formatYen(totalCost);
-    if (commentElement) commentElement.textContent = profitKnown.length===evaluations.length ? "取得原価が確認できる保有資産から損益を計算" : "取得原価不明の銘柄は評価額だけに含め、損益計算から除外";
+    if (commentElement) commentElement.textContent = evaluations.some(a=>a.type==="fund"&&a.amount>0&&(!a.navJpy||!a.navDate)) ? "投資信託の基準価額が未登録のため、総資産は未確定です" : profitKnown.length===evaluations.length ? "取得原価が確認できる保有資産から損益を計算" : "取得原価不明の銘柄は評価額だけに含め、損益計算から除外";
     const grandTotal=total;
-    [{type:"crypto",id:"crypto"},{type:"jp",id:"jpStock"},{type:"us",id:"usStock"}].forEach(group=>{
+    [{type:"crypto",id:"crypto"},{type:"jp",id:"jpStock"},{type:"us",id:"usStock"},{type:"fund",id:"fund"}].forEach(group=>{
       const rows=evaluations.filter(a=>a.type===group.type),value=rows.reduce((n,a)=>n+a.marketValueJpy,0),known=rows.filter(a=>a.profitJpy!==null),cost=known.reduce((n,a)=>n+a.acquisitionValueJpy,0),profit=known.reduce((n,a)=>n+a.profitJpy,0),el=document.getElementById(group.id+"Metrics");
       if(el)el.innerHTML=`構成比 ${grandTotal>0?(value/grandTotal*100).toFixed(1):"0.0"}%<br><b class="${getProfitClass(profit)}">損益 ${known.length?`${profit>=0?"+":""}${formatYen(profit)}（${formatPercent(cost>0?profit/cost*100:0)}）`:"原価未確定"}</b>`;
     });
@@ -276,14 +280,18 @@ function renderTotalAsset(evaluations) {
 
 function createAssetCard(asset) {
     const currentPriceText =
-        asset.type === "us"
+        asset.type === "fund"
+            ? `${formatYen(asset.navJpy)}／1万口（${escapePortfolioHtml(asset.navDate)}時点）`
+            : asset.type === "us"
             ? `${formatDollar(asset.currentPrice)}
                ／ 約${formatYen(asset.currentPriceJpy)}`
             : formatYen(asset.currentPriceJpy);
 
     const costText = asset.acquisitionValueJpy === null
         ? "取得原価未確定"
-        : asset.type === "us"
+        : asset.type === "fund"
+            ? `${formatYen(asset.cost * 10000)}／1万口`
+            : asset.type === "us"
             ? `${formatDollar(asset.cost)} ／ 約${formatYen(asset.amount > 0 ? asset.acquisitionValueJpy / asset.amount : 0)}`
             : formatYen(asset.cost);
 
@@ -308,7 +316,7 @@ function createAssetCard(asset) {
                 <span>保有数量</span>
                 <strong>
                     ${formatNumber(asset.amount)}
-                    ${asset.type === "crypto"
+                    ${asset.type === "fund" ? "口" : asset.type === "crypto"
                         ? escapePortfolioHtml(asset.symbol)
                         : "株"}
                 </strong>
@@ -320,9 +328,10 @@ function createAssetCard(asset) {
             </div>
 
             <div class="asset-row">
-                <span>現在価格</span>
+                <span>${asset.type === "fund" ? "基準価額・公表日" : "現在価格"}</span>
                 <strong>${currentPriceText}</strong>
             </div>
+            ${asset.type === "fund" ? `<div class="asset-row"><span>口座区分</span><strong>${asset.accountType === "nisa" ? "NISA" : asset.accountType === "taxable" ? "課税口座" : "未設定"}</strong></div>` : ""}
 
             <div class="asset-row">
                 <span>損益</span>
@@ -360,6 +369,10 @@ function renderPortfolio(evaluations) {
         {
             type: "us",
             title: "🇺🇸 米国株"
+        },
+        {
+            type: "fund",
+            title: "🌐 投資信託"
         }
     ];
 

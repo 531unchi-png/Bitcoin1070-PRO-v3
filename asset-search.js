@@ -1,7 +1,7 @@
 // Bitcoin1070 PRO v13.0 - shared asset search (local-first / online expansion)
 (function(global){
   const API_URL="https://bitcoin1070-api.531unchi.workers.dev";
-  const TYPES={jp:"日本株",us:"米国株",crypto:"仮想通貨"};
+  const TYPES={jp:"日本株",us:"米国株",crypto:"仮想通貨",fund:"投資信託"};
   const kataToHira=value=>String(value||"").replace(/[ァ-ヶ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
   function normalize(value){return kataToHira(String(value||"").normalize("NFKC").toLowerCase()).replace(/[\s・･,.，。()（）\-ー]/g,"");}
   function values(item){return [item.symbol,item.name,item.reading,item.yahooSymbol,item.coinGeckoId,...(item.keywords||[])].map(normalize).filter(Boolean);}

@@ -61,7 +61,7 @@
     if (values.some(r => r.value === null || r.value < 0)) return { ready: false, missing: ['評価額'] };
     const total = values.reduce((s, r) => s + r.value, money);
     if (total <= 0) return { ready: false, missing: ['資産評価額'] };
-    const category = { crypto: 0, jp: 0, us: 0, cash: money };
+    const category = { crypto: 0, jp: 0, us: 0, fund: 0, cash: money };
     for (const row of values) category[row.type] = (category[row.type] || 0) + row.value;
     const btc = values.filter(r => r.type === 'crypto' && r.symbol === 'BTC').reduce((s, r) => s + r.value, 0);
     const semiSet = new Set(limits.semiSymbols.split(',').filter(Boolean));
