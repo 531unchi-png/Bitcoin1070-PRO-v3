@@ -7,6 +7,10 @@
   const fmtDate = date => date ? date.replace(/-/g, '/') : '—';
   const fmtYen = price => `¥${Math.round(price).toLocaleString('ja-JP')}`;
   const text = (id, value) => { const el = $(id); if (el) el.textContent = value; };
+  function validHistory(payload) {
+    const report = window.Bitcoin1070CycleLabCore.examine(payload?.candles, { source: payload?.source });
+    return report.count >= 400 && report.resolution !== null && report.resolution <= 10 && !report.stale;
+  }
 
   async function history() {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000);
@@ -14,15 +18,15 @@
       const response = await fetch(API, { cache: 'no-store', signal: controller.signal });
       if (!response.ok) throw Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (!Array.isArray(data?.candles) || data.candles.length < 100 || !['yahoo', 'coingecko'].includes(data.source))
-        throw Error('履歴データ形式に問題があります');
+      if (!['yahoo', 'coingecko'].includes(data?.source) || !validHistory(data))
+        throw Error('取得履歴が週次相当ではありません。APIの更新または再取得をお待ちください');
       const payload = { candles: data.candles, source: data.source, fetchedAt: new Date().toISOString() };
       try { localStorage.setItem(CACHE, JSON.stringify(payload)); } catch (_) {}
       return { ...payload, cached: false };
     } catch (error) {
       let cached;
       try { cached = JSON.parse(localStorage.getItem(CACHE) || 'null'); } catch (_) {}
-      if (Array.isArray(cached?.candles) && cached.candles.length >= 100)
+      if (validHistory(cached))
         return { ...cached, cached: true, error: String(error?.message || error) };
       throw error;
     } finally { clearTimeout(timer); }
@@ -37,7 +41,8 @@
   function render(report, payload) {
     const source = report.source === 'yahoo' ? 'Yahoo Finance BTC/JPY 週足・終値'
       : 'CoinGecko BTC/JPY 約7日間隔の価格';
-    text('labStatus', payload.cached ? '保存データで表示中。最新履歴は取得できませんでした。' : '取得した履歴から再計算しました。');
+    text('labStatus', report.completedCount === 0 ? '比較できる完了サイクルがありません。履歴の開始・終了期間を確認してください。' :
+      payload.cached ? '保存データで表示中。最新履歴は取得できませんでした。' : '取得した履歴から再計算しました。');
     text('labSource', `${source}｜${report.count}点｜${fmtDate(report.first)}〜${fmtDate(report.last)}｜中央値 ${report.resolution ?? '—'}日間隔`);
     text('labUpdated', `取得: ${new Date(payload.fetchedAt).toLocaleString('ja-JP')}${report.stale ? '｜最終価格が21日超前のため最新サイクルは参考' : ''}`);
     text('labCount', `${report.completedCount}件`);
@@ -72,7 +77,7 @@
       const report = window.Bitcoin1070CycleLabCore.examine(payload.candles, { source: payload.source });
       render(report, payload);
     } catch (error) {
-      text('labStatus', '履歴を取得できませんでした。通信を確認して再試行してください。');
+      text('labStatus', '検証に必要な週次相当の履歴を取得できませんでした。再取得しても続く場合はAPI側の確認が必要です。');
       text('labSource', String(error?.message || error));
     }
   }
