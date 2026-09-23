@@ -43,6 +43,18 @@ test('unsupported lending and credit types cannot produce a result',()=>{
  const lent=annual([report]);
  lent.rows[0].lentQty=0.001;
  assert.equal(core.analyze({annual:[lent],trades:trades([buy,sell])},2025,{}).ready,false);
- assert.throws(()=>trades([buy.replace(',現物,',',信用,')]),/現物以外/);
+ assert.throws(()=>trades([buy.replace(',現物,',',信用,')]),/未対応の注文種別/);
  assert.equal(trades([buy.replace(',現物,',',指値,')]).length,1);
+});
+test('actual bitbank-style JPY fee row and spot CSV columns are reconciled',()=>{
+ const annualHeader='通貨名,年始数量,JPY建て年中購入数量,JPY建て年中購入金額,BTC建て年中購入数量,BTC建て年中購入金額,JPY建て年中売却数量,JPY建て年中売却金額,BTC建て年中売却数量,BTC建て年中売却金額,移入数量,移出数量,支払手数料,貸出数量,返却数量,貸出損益,年末数量';
+ const reportText=['氏名:,架空の例,,年間取引報告書,,発行者:,テスト',annualHeader,'jpy,0,0,0,0,0,0,0,0,0,0,0,30,0,0,0,0','btc,0,1,1000,0,0,0.5,750,0,0,0,0,0,0,0,0,0.5'].join('\n');
+ const tradeText=['注文id,取引id,通貨ペア,現物/信用,タイプ,売/買,数量,価格,実現損益,発生手数料,実現手数料,実現利息,m/t,取引日時','1,a,btc_jpy,現物,market,buy,1,1000,,10,10,,taker,2025-02-01 10:00:00.123','2,b,btc_jpy,現物,limit,sell,0.5,1500,,20,20,,maker,2025-12-31 20:00:00.02'].join('\n');
+ const annualReport=core.parseAnnual(reportText,2025),traded=core.parseTrades(tradeText);
+ assert.equal(annualReport.rows.length,1);assert.equal(annualReport.jpyFee,30);assert.equal(traded.length,2);
+ const result=core.analyze({annual:[annualReport],trades:traded},2025,{});
+ assert.equal(result.ready,true);assert.equal(result.income,225);assert.equal(result.rows[0].endBasis,505);
+ const mismatched=core.parseAnnual(reportText.replace('jpy,0,0,0,0,0,0,0,0,0,0,0,30,','jpy,0,0,0,0,0,0,0,0,0,0,0,580,'),2025);
+ assert.match(core.analyze({annual:[mismatched],trades:traded},2025,{}).issues.join(),/JPY行の支払手数料/);
+ assert.throws(()=>core.parseTrades(tradeText.replace(',現物,market,',',信用,market,')),/現物以外/);
 });
