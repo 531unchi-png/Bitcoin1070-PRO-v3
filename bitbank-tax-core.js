@@ -31,6 +31,32 @@
     for(let i=h.index+1;i<rows.length;i++){const r=rows[i],date=String(h.get(r,'日時')||'').trim();if(!date)continue;const status=norm(h.get(r,'ステータス'));if(['cancel','canceled','cancelled','失敗','取消','キャンセル'].includes(status))continue;if(!['done','completed','完了','成功'].includes(status))throw Error(`${i+1}行目の出金状態を確認できません`);parsed.push({date:japanDate(date),fee:decimal(h.get(r,'手数料'),`${i+1}行目の手数料`)});}
     return parsed;
   }
+  function parseRakuten(text){const rows=csv(text),h=head(rows,['取引年月日','取引種別','通貨ペア','増加通貨名','増加数量','減少通貨名','減少数量','手数料通貨','手数料数量']);
+    let year=null,pointCount=0,pointQty=0,buyCount=0,buyQty=0,buyJpy=0;
+    for(let i=h.index+1;i<rows.length;i++){
+      const r=rows[i],raw=String(h.get(r,'取引年月日')||'').trim();if(!raw)continue;
+      const m=raw.match(/^(\d{2})\/(\d{2})\/(\d{2}) \d{2}:\d{2}:\d{2}$/);
+      if(!m)throw Error(`${i+1}行目の日付を認識できません`);
+      const date=japanDate(`20${m[1]}-${m[2]}-${m[3]} ${raw.split(' ')[1]}`),rowYear=yearJp(date);
+      if(year!==null&&year!==rowYear)throw Error('楽天ウォレットのCSVは1年分ずつ指定してください');year=rowYear;
+      const kind=String(h.get(r,'取引種別')||'').trim(),currency=String(h.get(r,'増加通貨名')||'').trim().toUpperCase(),pair=String(h.get(r,'通貨ペア')||'').trim().toUpperCase();
+      if(kind==='入金'&&currency==='JPY'&&pair==='JPY')continue;
+      if(currency!=='BTC')throw Error(`${i+1}行目に未対応の暗号資産があります`);
+      const qty=decimal(h.get(r,'増加数量'),`${i+1}行目のBTC数量`);
+      if(qty<=0)throw Error(`${i+1}行目のBTC数量が不正です`);
+      if(kind==='その他(預入)'&&pair==='BTC'&&!String(h.get(r,'減少通貨名')||'').trim()){pointCount++;pointQty+=qty;continue;}
+      if(kind==='買い'&&pair==='BTC/JPY'&&String(h.get(r,'減少通貨名')||'').trim().toUpperCase()==='JPY'){
+        const spent=decimal(h.get(r,'減少数量'),`${i+1}行目の日本円支払`,{signed:true});
+        if(spent>=0)throw Error(`${i+1}行目の日本円支払が不正です`);
+        const fee=decimal(h.get(r,'手数料数量'),`${i+1}行目の手数料`,{blankZero:true});
+        if(fee||String(h.get(r,'手数料通貨')||'').trim().toUpperCase()!=='BTC')throw Error(`${i+1}行目の手数料の扱いを確認してください`);
+        buyCount++;buyQty+=qty;buyJpy-=spent;continue;
+      }
+      throw Error(`${i+1}行目の取引種別「${kind}」には未対応です。所得を推測せず取込を止めました`);
+    }
+    if(year===null||!pointCount&&!buyCount)throw Error('楽天ウォレットのBTC購入・受取履歴がありません');
+    return {year,pointCount,pointQty:Number(pointQty.toFixed(8)),buyCount,buyQty:Number(buyQty.toFixed(8)),buyJpy};
+  }
   const close=(a,b)=>Math.abs(a-b)<=Math.max(0.0000001,Math.max(Math.abs(a),Math.abs(b))*0.00000001);
   function analyze(records,year,openingBasis={}){
     const report=records?.annual?.find(x=>x.year===year);if(!report)return {ready:false,issues:[`${year}年の年間取引報告書がありません`],rows:[]};
@@ -59,5 +85,5 @@
   }
   function progressiveTax(income){const taxable=Math.floor(Math.max(0,income)/1000)*1000;const bands=[[1950000,.05,0],[3300000,.10,97500],[6950000,.20,427500],[9000000,.23,636000],[18000000,.33,1536000],[40000000,.40,2796000],[Infinity,.45,4796000]];const [,rate,deduct]=bands.find(([upper])=>taxable<upper);return Math.max(0,taxable*rate-deduct);}
   function estimateTax(income,base){if(income===null||!Number.isFinite(income)||income<0||base===undefined||base===''||!Number.isFinite(Number(base))||Number(base)<0)return null;const gain=income,before=progressiveTax(Number(base)),after=progressiveTax(Number(base)+gain);return{additionalIncomeTax:Math.round((after-before)*1.021),residentReference:Math.round(gain*.1),totalReference:Math.round((after-before)*1.021+gain*.1)};}
-  return{csv,parseAnnual,parseTrades,parseDealer,parseFiatWithdrawals,analyze,estimateTax,yearJp};
+  return{csv,parseAnnual,parseTrades,parseDealer,parseFiatWithdrawals,parseRakuten,analyze,estimateTax,yearJp};
 });

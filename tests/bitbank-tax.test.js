@@ -69,3 +69,12 @@ test('dealer purchases and confirmed JPY withdrawal fees reconcile without deduc
  assert.equal(core.analyze({annual:[report],trades:spot,withdrawals},2025,{}).ready,false);
  assert.equal(core.analyze({annual:[report],trades:[...spot,...dealer]},2025,{}).ready,false);
 });
+test('Rakuten Wallet yearly CSV records BTC buys and unresolved deposits without inventing point cost',()=>{
+ const columns='取引年月日,取引種別,取引形態,通貨ペア,増加通貨名,増加数量,減少通貨名,減少数量,約定価格,単価,手数料通貨,手数料数量,備考';
+ const rows=['25/03/04 18:54:57,その他(預入),,BTC,BTC,0.00004814,,,,,,,','25/03/29 20:01:33,入金,,JPY,JPY,1448,,,,,,,','25/03/29 20:01:54,買い,自己,BTC/JPY,BTC,0.00011365,JPY,-1448,1448,12740869,BTC,0.00000000,'];
+ const parsed=core.parseRakuten([columns,...rows].join('\n'));
+ assert.deepEqual(parsed,{year:2025,pointCount:1,pointQty:0.00004814,buyCount:1,buyQty:0.00011365,buyJpy:1448});
+ assert.equal(Object.hasOwn(parsed,'pointJpy'),false);
+ assert.throws(()=>core.parseRakuten([columns,...rows,'25/04/01 09:00:00,売り,自己,BTC/JPY,JPY,1000,BTC,-0.001,1000,1000000,BTC,0,'].join('\n')),/未対応/);
+ assert.throws(()=>core.parseRakuten([columns,rows[0].replace('25/03/04','24/03/04'),rows[2]].join('\n')),/1年分/);
+});
