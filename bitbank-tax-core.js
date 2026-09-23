@@ -65,6 +65,15 @@
       entries.push({date:date.slice(2),qty:Number(qty),points:pointNumber});
     }}if(!entries.length)throw Error('ポイント交換明細が見つかりません');const year=Number(entries[0].date.slice(0,2))+2000;if(entries.some(e=>Number(e.date.slice(0,2))+2000!==year))throw Error('報告書に複数年の交換が含まれています');return {year,entries};
   }
+  function parseRakutenPointCsv(text){const rows=csv(text),h=head(rows,['交換日','BTC数量','使用ポイント']),entries=[];let year=null;
+    for(let i=h.index+1;i<rows.length;i++){const r=rows[i],date=String(h.get(r,'交換日')||'').trim(),quantity=String(h.get(r,'BTC数量')||'').trim(),pointText=String(h.get(r,'使用ポイント')||'').trim();if(!date&&!quantity&&!pointText)continue;
+      const parts=date.match(/^(20\d\d)\/(\d\d)\/(\d\d)$/),d=parts&&new Date(`${date.replaceAll('/','-')}T00:00:00Z`);if(!parts||!d||d.toISOString().slice(0,10)!==date.replaceAll('/','-'))throw Error(`${i+1}行目の交換日が不正です`);
+      const rowYear=Number(parts[1]);if(year!==null&&year!==rowYear)throw Error('交換明細CSVは1年分ずつ指定してください');year=rowYear;
+      if(!/^(?:0\.\d{1,8})$/.test(quantity)||Number(quantity)<=0)throw Error(`${i+1}行目のBTC数量が不正です`);
+      if(!/^[1-9]\d*$/.test(pointText)||!Number.isSafeInteger(Number(pointText)))throw Error(`${i+1}行目の使用ポイントが不正です`);
+      entries.push({date:date.slice(2),qty:Number(quantity),points:Number(pointText)});
+    }if(!entries.length)throw Error('ポイント交換明細が見つかりません');return {year,entries};
+  }
   function matchRakutenPoints(wallet,report){if(!wallet||wallet.year!==report.year||!Array.isArray(wallet.pointEntries)||wallet.pointEntries.length!==wallet.pointCount)throw Error('同年の楽天ウォレット現物CSVを再取込してください');
     const remaining=[...wallet.pointEntries];for(const row of report.entries){const date=new Date(`20${row.date.replaceAll('/','-')}T00:00:00Z`).getTime(),matches=remaining.map((entry,i)=>({entry,i})).filter(({entry})=>entry.qty.toFixed(8)===row.qty.toFixed(8)&&Math.abs(new Date(`20${entry.date.replaceAll('/','-')}T00:00:00Z`).getTime()-date)<=86400000);
       const exact=matches.filter(({entry})=>entry.date===row.date),chosen=exact.length?exact:matches;if(chosen.length!==1)throw Error(`${row.date} の交換が現物CSVと一意に一致しません`);remaining.splice(chosen[0].i,1);}
@@ -99,5 +108,5 @@
   }
   function progressiveTax(income){const taxable=Math.floor(Math.max(0,income)/1000)*1000;const bands=[[1950000,.05,0],[3300000,.10,97500],[6950000,.20,427500],[9000000,.23,636000],[18000000,.33,1536000],[40000000,.40,2796000],[Infinity,.45,4796000]];const [,rate,deduct]=bands.find(([upper])=>taxable<upper);return Math.max(0,taxable*rate-deduct);}
   function estimateTax(income,base){if(income===null||!Number.isFinite(income)||income<0||base===undefined||base===''||!Number.isFinite(Number(base))||Number(base)<0)return null;const gain=income,before=progressiveTax(Number(base)),after=progressiveTax(Number(base)+gain);return{additionalIncomeTax:Math.round((after-before)*1.021),residentReference:Math.round(gain*.1),totalReference:Math.round((after-before)*1.021+gain*.1)};}
-  return{csv,parseAnnual,parseTrades,parseDealer,parseFiatWithdrawals,parseRakuten,parseRakutenReportPages,matchRakutenPoints,analyze,estimateTax,yearJp};
+  return{csv,parseAnnual,parseTrades,parseDealer,parseFiatWithdrawals,parseRakuten,parseRakutenReportPages,parseRakutenPointCsv,matchRakutenPoints,analyze,estimateTax,yearJp};
 });
