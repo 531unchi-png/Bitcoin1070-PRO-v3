@@ -32,7 +32,7 @@
     return parsed;
   }
   function parseRakuten(text){const rows=csv(text),h=head(rows,['取引年月日','取引種別','通貨ペア','増加通貨名','増加数量','減少通貨名','減少数量','手数料通貨','手数料数量']);
-    let year=null,pointCount=0,pointQty=0,buyCount=0,buyQty=0,buyJpy=0;
+    let year=null,pointCount=0,pointQty=0,buyCount=0,buyQty=0,buyJpy=0;const pointEntries=[];
     for(let i=h.index+1;i<rows.length;i++){
       const r=rows[i],raw=String(h.get(r,'取引年月日')||'').trim();if(!raw)continue;
       const m=raw.match(/^(\d{2})\/(\d{2})\/(\d{2}) \d{2}:\d{2}:\d{2}$/);
@@ -44,7 +44,7 @@
       if(currency!=='BTC')throw Error(`${i+1}行目に未対応の暗号資産があります`);
       const qty=decimal(h.get(r,'増加数量'),`${i+1}行目のBTC数量`);
       if(qty<=0)throw Error(`${i+1}行目のBTC数量が不正です`);
-      if(kind==='その他(預入)'&&pair==='BTC'&&!String(h.get(r,'減少通貨名')||'').trim()){pointCount++;pointQty+=qty;continue;}
+      if(kind==='その他(預入)'&&pair==='BTC'&&!String(h.get(r,'減少通貨名')||'').trim()){pointCount++;pointQty+=qty;pointEntries.push({date:raw.slice(0,8),qty});continue;}
       if(kind==='買い'&&pair==='BTC/JPY'&&String(h.get(r,'減少通貨名')||'').trim().toUpperCase()==='JPY'){
         const spent=decimal(h.get(r,'減少数量'),`${i+1}行目の日本円支払`,{signed:true});
         if(spent>=0)throw Error(`${i+1}行目の日本円支払が不正です`);
@@ -55,7 +55,21 @@
       throw Error(`${i+1}行目の取引種別「${kind}」には未対応です。所得を推測せず取込を止めました`);
     }
     if(year===null||!pointCount&&!buyCount)throw Error('楽天ウォレットのBTC購入・受取履歴がありません');
-    return {year,pointCount,pointQty:Number(pointQty.toFixed(8)),buyCount,buyQty:Number(buyQty.toFixed(8)),buyJpy};
+    return {year,pointCount,pointQty:Number(pointQty.toFixed(8)),buyCount,buyQty:Number(buyQty.toFixed(8)),buyJpy,pointEntries};
+  }
+  function parseRakutenReportPages(pages){if(!Array.isArray(pages)||!pages.length||pages.length>30)throw Error('年間報告書のページを確認してください');const entries=[];
+    for(const page of pages){const words=page.map(x=>String(x).trim()).filter(Boolean);for(let i=0;i<words.length;i++)if(words[i].normalize('NFKC')==='入庫(ポイント交換)'){
+      const before=words.slice(Math.max(0,i-6),i),date=before.find(x=>/^20\d\d\/\d\d\/\d\d$/.test(x)),qty=before.at(-1),points=words[i+1],rate=words[i+2];
+      if(!date||!/^0\.\d{1,8}$/.test(qty||'')||!/^[\d,]+$/.test(points||'')||!/^[\d,]+$/.test(rate||''))throw Error('ポイント交換明細の読み取りに失敗しました');
+      const pointNumber=decimal(points,'使用ポイント数'),rateNumber=decimal(rate,'交換レート');if(pointNumber<=0||rateNumber<=0||Math.abs(pointNumber-Number(qty)*rateNumber)>Math.max(3,pointNumber*.01))throw Error('ポイント数と交換レートが一致しません');
+      entries.push({date:date.slice(2),qty:Number(qty),points:pointNumber});
+    }}if(!entries.length)throw Error('ポイント交換明細が見つかりません');const year=Number(entries[0].date.slice(0,2))+2000;if(entries.some(e=>Number(e.date.slice(0,2))+2000!==year))throw Error('報告書に複数年の交換が含まれています');return {year,entries};
+  }
+  function matchRakutenPoints(wallet,report){if(!wallet||wallet.year!==report.year||!Array.isArray(wallet.pointEntries)||wallet.pointEntries.length!==wallet.pointCount)throw Error('同年の楽天ウォレット現物CSVを再取込してください');
+    const remaining=[...wallet.pointEntries];for(const row of report.entries){const date=new Date(`20${row.date.replaceAll('/','-')}T00:00:00Z`).getTime(),matches=remaining.map((entry,i)=>({entry,i})).filter(({entry})=>entry.qty.toFixed(8)===row.qty.toFixed(8)&&Math.abs(new Date(`20${entry.date.replaceAll('/','-')}T00:00:00Z`).getTime()-date)<=86400000);
+      const exact=matches.filter(({entry})=>entry.date===row.date),chosen=exact.length?exact:matches;if(chosen.length!==1)throw Error(`${row.date} の交換が現物CSVと一意に一致しません`);remaining.splice(chosen[0].i,1);}
+    if(report.entries.length!==wallet.pointCount||remaining.length)throw Error('ポイント交換の件数が一致しません。報告書とCSVの全期間を確認してください');
+    return {year:wallet.year,count:report.entries.length,qty:Number(report.entries.reduce((a,x)=>a+x.qty,0).toFixed(8)),points:report.entries.reduce((a,x)=>a+x.points,0)};
   }
   const close=(a,b)=>Math.abs(a-b)<=Math.max(0.0000001,Math.max(Math.abs(a),Math.abs(b))*0.00000001);
   function analyze(records,year,openingBasis={}){
@@ -85,5 +99,5 @@
   }
   function progressiveTax(income){const taxable=Math.floor(Math.max(0,income)/1000)*1000;const bands=[[1950000,.05,0],[3300000,.10,97500],[6950000,.20,427500],[9000000,.23,636000],[18000000,.33,1536000],[40000000,.40,2796000],[Infinity,.45,4796000]];const [,rate,deduct]=bands.find(([upper])=>taxable<upper);return Math.max(0,taxable*rate-deduct);}
   function estimateTax(income,base){if(income===null||!Number.isFinite(income)||income<0||base===undefined||base===''||!Number.isFinite(Number(base))||Number(base)<0)return null;const gain=income,before=progressiveTax(Number(base)),after=progressiveTax(Number(base)+gain);return{additionalIncomeTax:Math.round((after-before)*1.021),residentReference:Math.round(gain*.1),totalReference:Math.round((after-before)*1.021+gain*.1)};}
-  return{csv,parseAnnual,parseTrades,parseDealer,parseFiatWithdrawals,parseRakuten,analyze,estimateTax,yearJp};
+  return{csv,parseAnnual,parseTrades,parseDealer,parseFiatWithdrawals,parseRakuten,parseRakutenReportPages,matchRakutenPoints,analyze,estimateTax,yearJp};
 });
