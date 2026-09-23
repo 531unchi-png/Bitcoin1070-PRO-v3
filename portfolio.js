@@ -749,6 +749,7 @@ function setupRestoreButton() {
             else localStorage.removeItem(snapshotKey);
             if(restored.strategyLimits)localStorage.setItem(limitsKey,JSON.stringify(restored.strategyLimits));
             else localStorage.removeItem(limitsKey);
+            saveCryptoTaxRecords(restored.cryptoTax);
 
             await loadMarketData();
 
