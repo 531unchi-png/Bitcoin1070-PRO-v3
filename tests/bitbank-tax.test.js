@@ -86,3 +86,13 @@ test('Rakuten report points match every CSV deposit and reject unmatched quantit
  assert.throws(()=>core.matchRakutenPoints(wallet,{...report,entries:[{...report.entries[0],qty:0.000006}]}),/一致/);
  assert.throws(()=>core.parseRakutenReportPages([['2025/08/04','-','-','0.00000576','入庫(ポイント交換)','100','100']]),/一致/);
 });
+test('Rakuten point exchange CSV reconciles and rejects malformed, duplicate and mismatched entries',()=>{
+ const wallet=core.parseRakuten('取引年月日,取引種別,通貨ペア,増加通貨名,増加数量,減少通貨名,減少数量,手数料通貨,手数料数量\n25/08/05 00:01:00,その他(預入),BTC,BTC,0.00000576,,,,');
+ const valid='交換日,BTC数量,使用ポイント\r\n2025/08/04,0.00000576,100\r\n';
+ assert.deepEqual(core.matchRakutenPoints(wallet,core.parseRakutenPointCsv(valid)),{year:2025,count:1,qty:0.00000576,points:100});
+ assert.throws(()=>core.parseRakutenPointCsv(valid.replace('2025/08/04','2025/02/30')),/交換日/);
+ assert.throws(()=>core.parseRakutenPointCsv(valid.replace('0.00000576','0.000005761')),/BTC数量/);
+ assert.throws(()=>core.parseRakutenPointCsv(valid.replace(',100',',0')),/使用ポイント/);
+ assert.throws(()=>core.parseRakutenPointCsv(valid+'2024/08/04,0.00000576,100\n'),/1年分/);
+ assert.throws(()=>core.matchRakutenPoints(wallet,core.parseRakutenPointCsv(valid+'2025/08/04,0.00000576,100\n')),/一意に一致/);
+});
