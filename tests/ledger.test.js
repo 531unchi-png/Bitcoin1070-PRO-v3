@@ -18,6 +18,13 @@ state=api.applyLedgerTransaction(state.assets,state.cashBalance,{kind:'WITHDRAWA
 assert.throws(()=>api.applyLedgerTransaction(state.assets,state.cashBalance,{kind:'WITHDRAWAL',date:'2026-08-16T15:00',amount:100001}),/日本円残高/);
 let us=api.applyLedgerTransaction([],500000,{kind:'BUY',date:'2026-08-16T12:00',type:'us',symbol:'NVDA',name:'NVIDIA',quantity:10,unitPrice:100,fxRate:150,feeJpy:1000});
 assert.equal(us.assets[0].costJpy,15100);assert.equal(us.assets[0].acquisitionUsdJpy,151);assert.equal(us.cashBalance,349000);
+for(const symbol of ['0331418A','03311187']){
+ const fund={type:'fund',symbol,name:'eMAXIS Slim',amount:10000,cost:2,navJpy:30000,navDate:'2026-08-16',accountType:'nisa'};
+ const bought=api.applyLedgerTransaction([fund],100000,{kind:'BUY',date:'2026-08-16T12:00',type:'fund',symbol,name:fund.name,quantity:5000,unitPrice:40000,feeJpy:0});
+ assert.equal(bought.assets[0].amount,15000);assert.equal(bought.cashBalance,80000);assert.equal(bought.assets[0].navJpy,30000);assert.equal(bought.entry.accountType,'nisa');
+ const sold=api.applyLedgerTransaction(bought.assets,bought.cashBalance,{kind:'SELL',date:'2026-08-16T13:00',type:'fund',symbol,name:fund.name,quantity:5000,unitPrice:45000,feeJpy:0});
+ assert.equal(sold.assets[0].amount,10000);assert.equal(sold.cashBalance,102500);assert.equal(sold.entry.realizedPnlJpy,22500-5000*bought.assets[0].cost);
+}
 api.resetAppStorage();api.commitLedgerTransaction({kind:'DEPOSIT',date:'2026-08-16T12:00',amount:200000});assert.equal(api.loadCashBalance(),200000);assert.equal(api.loadTransactionsFromStorage()[0].kind,'DEPOSIT');
 api.commitLedgerTransaction({kind:'BUY',date:'2026-08-16T12:30',type:'crypto',symbol:'BTC',name:'Bitcoin',quantity:.01,unitPrice:10000000,feeJpy:0,coinGeckoId:'bitcoin'});assert.equal(api.loadCashBalance(),100000);assert.equal(api.loadAssetsFromStorage([])[0].coinGeckoId,'bitcoin');
 api.resetAppStorage();assert.equal(api.loadCashBalance(),0);assert.equal(api.loadTransactionsFromStorage().length,0);
