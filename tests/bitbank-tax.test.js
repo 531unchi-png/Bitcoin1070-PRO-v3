@@ -58,3 +58,14 @@ test('actual bitbank-style JPY fee row and spot CSV columns are reconciled',()=>
  assert.match(core.analyze({annual:[mismatched],trades:traded},2025,{}).issues.join(),/JPY行の支払手数料/);
  assert.throws(()=>core.parseTrades(tradeText.replace(',現物,market,',',信用,market,')),/現物以外/);
 });
+test('dealer purchases and confirmed JPY withdrawal fees reconcile without deducting withdrawal from income',()=>{
+ const annualHeader='通貨名,年始数量,JPY建て年中購入数量,JPY建て年中購入金額,BTC建て年中購入数量,BTC建て年中購入金額,JPY建て年中売却数量,JPY建て年中売却金額,BTC建て年中売却数量,BTC建て年中売却金額,移入数量,移出数量,支払手数料,貸出数量,返却数量,貸出損益,年末数量';
+ const report=core.parseAnnual([annualHeader,'JPY,0,0,0,0,0,0,0,0,0,0,0,570,0,0,0,0','XRP,0,2,300,0,0,1,250,0,0,0,0,0,0,0,0,1'].join('\n'),2025);
+ const spot=core.parseTrades(['取引id,通貨ペア,現物/信用,タイプ,売/買,数量,価格,発生手数料,取引日時','trade1,xrp_jpy,現物,market,buy,1,100,10,2025/01/01 10:00:00','trade2,xrp_jpy,現物,market,sell,1,250,10,2025/02/01 10:00:00'].join('\n'));
+ const dealer=core.parseDealer('注文ID,通貨,売/買,数量,指値価格,売買日時\norder1,xrp,買,1,200,2025/03/01 10:00:00');
+ const withdrawals=core.parseFiatWithdrawals('日時,数量,手数料,出金先口座,ステータス\n2025/06/01 10:00:00,1000,550,REDACTED,DONE');
+ const result=core.analyze({annual:[report],trades:[...spot,...dealer],withdrawals},2025,{});
+ assert.equal(result.ready,true);assert.equal(result.income,85);assert.equal(result.rows[0].endBasis,155);
+ assert.equal(core.analyze({annual:[report],trades:spot,withdrawals},2025,{}).ready,false);
+ assert.equal(core.analyze({annual:[report],trades:[...spot,...dealer]},2025,{}).ready,false);
+});
