@@ -87,7 +87,7 @@ function renderAssetEditor() {
     }).join('');
     const cashBalance = typeof loadCashBalance === 'function' ? loadCashBalance() : 0;
     const cashCard = `<section class="card cash-editor-card"><h2>💴 日本円（現金）</h2><p class="small">銀行口座・証券口座の買付余力など、資産として管理したい日本円を入力してください。価格取得や損益計算の対象にはしません。</p><label>日本円残高（円）<input id="cashBalanceInput" type="number" inputmode="numeric" step="1" min="0" value="${cashBalance}" placeholder="例：86288"></label><button id="saveCashButton" type="button" class="full-width-button">💾 日本円を保存</button></section>`;
-    const fundCard=`<section class="card add-asset-card"><h2>🌐 投資信託を登録</h2><p class="small">基準価額・取得単価は円/1万口。保有口数はSBI証券の表示を入力。価額は自動更新しません。<a href="https://www.am.mufg.jp/fund/253425.html" target="_blank" rel="noopener noreferrer">オルカン公式の基準価額を見る ↗</a></p><div class="editor-page-grid"><label>ファンドを選択<select id="fundPreset"><option value="0331418A">eMAXIS Slim 全世界株式（オール・カントリー）</option><option value="03311187">eMAXIS Slim 米国株式（S&P500）</option><option value="custom">その他（手入力）</option></select></label><label>投信協会コード<input id="fundSymbol" value="0331418A" maxlength="40"></label><label>ファンド名<input id="fundName" value="eMAXIS Slim 全世界株式（オール・カントリー）"></label><label>保有口数<input id="fundAmount" type="number" inputmode="decimal" step="any" min="0.000001" placeholder="例：150000"></label><label>平均取得単価（円/1万口、任意）<input id="fundCost" type="number" inputmode="decimal" step="any" min="0"></label><label>最新基準価額（円/1万口）<input id="fundNav" type="number" inputmode="decimal" step="any" min="0.01"></label><label>基準価額の公表日<input id="fundNavDate" type="date"></label><label>口座区分<select id="fundAccount"><option value="unknown">未設定</option><option value="nisa">NISA</option><option value="taxable">課税口座</option></select></label></div><button id="addFundButton" type="button" class="full-width-button">投資信託を登録</button></section>`;
+    const fundCard=`<section class="card add-asset-card"><h2>🌐 投資信託を登録</h2><p class="small">基準価額・取得単価は円/1万口。保有口数はSBI証券の表示を入力。対応する2本は公式APIから基準価額を取得できます。通信できないときは手入力できます。<a href="https://www.am.mufg.jp/fund/253425.html" target="_blank" rel="noopener noreferrer">オルカン公式の基準価額を見る ↗</a></p><div class="editor-page-grid"><label>ファンドを選択<select id="fundPreset"><option value="0331418A">eMAXIS Slim 全世界株式（オール・カントリー）</option><option value="03311187">eMAXIS Slim 米国株式（S&P500）</option><option value="custom">その他（手入力）</option></select></label><label>投信協会コード<input id="fundSymbol" value="0331418A" maxlength="40"></label><label>ファンド名<input id="fundName" value="eMAXIS Slim 全世界株式（オール・カントリー）"></label><label>保有口数<input id="fundAmount" type="number" inputmode="decimal" step="any" min="0.000001" placeholder="例：150000"></label><label>平均取得単価（円/1万口、任意）<input id="fundCost" type="number" inputmode="decimal" step="any" min="0"></label><label>最新基準価額（円/1万口）<input id="fundNav" type="number" inputmode="decimal" step="any" min="0.01"></label><label>基準価額の公表日<input id="fundNavDate" type="date"></label><label>口座区分<select id="fundAccount"><option value="unknown">未設定</option><option value="nisa">NISA</option><option value="taxable">課税口座</option></select></label></div><button id="fetchFundNavButton" type="button" class="full-width-button">↻ 最新基準価額を取得</button><p id="fundNavFeedback" class="small" aria-live="polite"></p><button id="addFundButton" type="button" class="full-width-button">投資信託を登録</button></section>`;
     editor.innerHTML=`${cashCard}${items||'<div class="card"><p>保有資産がまだありません。</p></div>'}${fundCard}<section class="card add-asset-card"><h2>➕ 新しい銘柄を追加</h2><p class="small">シンボルでも銘柄名でも検索できます。日本株・米国株・仮想通貨をオンライン検索し、ひらがな・カタカナ・漢字・証券コードで検索できます。入力文字で始まる候補を優先表示します。</p><div class="editor-page-grid"><label>種類<select id="newAssetType"><option value="crypto">仮想通貨</option><option value="jp">日本株</option><option value="us">米国株</option></select></label><label class="asset-search-label">シンボル・銘柄検索<input id="newAssetSymbol" type="text" autocomplete="off" placeholder="あ / あい / ソフトバンク / 9984 / BTC"><div id="assetSuggestions" class="asset-suggestions hidden"></div></label><label>銘柄名<input id="newAssetName" type="text" placeholder="候補選択で自動入力"></label><label>数量・株数<input id="newAssetAmount" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label>平均取得単価 <span id="costUnitHint" class="field-hint">円</span><input id="newAssetCost" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label><label id="newAcquisitionFxField" class="hidden">取得時 USD/JPY <span class="field-hint">必須（損益計算）</span><input id="newAssetAcquisitionUsdJpy" type="number" inputmode="decimal" step="any" min="0.01" placeholder="例：150.25"><small class="input-help">現在の為替ではなく、取得時のレートを入力してください。</small></label><label id="coinGeckoField">CoinGecko ID<input id="newCoinGeckoId" type="text" placeholder="候補選択で自動入力"></label><label id="newAccountField">口座区分<select id="newAssetAccount"><option value="unknown">未設定</option><option value="nisa">NISA</option><option value="taxable">課税口座</option></select></label><label id="yahooField" class="hidden">Yahoo Financeコード<input id="newYahooSymbol" type="text" placeholder="候補選択で自動入力"></label></div><div id="autoFillStatus" class="auto-fill-status">🔍 シンボルまたは銘柄名を入力してください</div><button id="addAssetButton" type="button" class="full-width-button">➕ 銘柄を追加</button></section>`;
     editor.querySelectorAll('[data-delete-index]').forEach(b=>b.addEventListener('click',()=>deleteAsset(Number(b.dataset.deleteIndex))));
     document.getElementById('saveCashButton')?.addEventListener('click',()=>{ const input=document.getElementById('cashBalanceInput'); const value=Math.max(0,Math.floor(Number(input?.value)||0)); saveCashBalance(value); invalidatePerformanceHistory(); transactionHistory.unshift({id:Date.now(),date:new Date().toISOString(),action:`日本円残高を ¥${value.toLocaleString('ja-JP')} に更新`}); saveHistoryToStorage(transactionHistory); alert('日本円残高を保存しました！'); });
@@ -96,9 +96,12 @@ function renderAssetEditor() {
       document.getElementById('fundSymbol').value=code==='custom'?'':code;
       document.getElementById('fundName').value=FUND_PRESETS[code]||'';
       for(const id of ['fundAmount','fundCost','fundNav','fundNavDate'])document.getElementById(id).value='';
+      if(code!=='custom')fetchPresetFundNav();
     });
+    document.getElementById('fetchFundNavButton')?.addEventListener('click',fetchPresetFundNav);
     document.getElementById('addFundButton')?.addEventListener('click',addFundHolding);
     bindAddForm();
+    fetchPresetFundNav();
 }
 function bindAddForm(){
   const type=document.getElementById('newAssetType'), input=document.getElementById('newAssetSymbol');
@@ -186,6 +189,28 @@ function addFundHolding(){
     const sanitized=next.map(sanitizeAsset);saveAssetsToStorage(sanitized);assets=sanitized;invalidatePerformanceHistory();
     transactionHistory.unshift({id:Date.now(),date:new Date().toISOString(),action:`${name}を登録`});saveHistoryToStorage(transactionHistory);renderAssetEditor();alert('投資信託を登録しました');
   }catch(error){alert(error.message)}
+}
+async function fetchPresetFundNav(){
+  const button=document.getElementById('fetchFundNavButton'), feedback=document.getElementById('fundNavFeedback');
+  const symbol=document.getElementById('fundSymbol')?.value.trim().toUpperCase();
+  if(!Object.hasOwn(FUND_PRESETS,symbol)){
+    feedback.textContent='自動取得はオルカンとeMAXIS Slim S&P500に対応しています。';return;
+  }
+  const startingNav=document.getElementById('fundNav').value;
+  const startingDate=document.getElementById('fundNavDate').value;
+  button.disabled=true;feedback.textContent='公式基準価額を確認中…';
+  try{
+    const quotes=await window.B1070_FUND_NAV.fetchQuotes([symbol]);
+    if(document.getElementById('fundSymbol')?.value.trim().toUpperCase()!==symbol)return;
+    if(document.getElementById('fundNav').value!==startingNav || document.getElementById('fundNavDate').value!==startingDate){
+      feedback.textContent='入力中の基準価額を維持しました。再取得する場合はボタンを押してください。';return;
+    }
+    const quote=quotes[symbol];
+    document.getElementById('fundNav').value=quote.navJpy;
+    document.getElementById('fundNavDate').value=quote.navDate;
+    feedback.textContent=`${quote.navDate} 公表：${quote.navJpy.toLocaleString('ja-JP')}円/1万口`;
+  }catch(error){feedback.textContent='取得できませんでした。基準価額と公表日は手入力してください。';console.warn('基準価額取得エラー:',error);}
+  finally{button.disabled=false;}
 }
 function collectChanges(target=assets){ document.querySelectorAll('#editor [data-index][data-field]').forEach(input=>{ const asset=target[Number(input.dataset.index)]; if(!asset)return; const field=input.dataset.field; if(field==='acquisitionUsdJpy'){setUsAssetAcquisitionFx(asset,input.value.trim());return;} if(field==='cost'){asset.cost=input.value.trim()===''?null:Number(input.value)/(asset.type==='fund'?10000:1);return;} asset[field]=(field==='amount'||field==='navJpy')?Number(input.value):input.value.trim(); }); }
 function saveChanges(){ try{const next=assets.map(asset=>({...asset}));collectChanges(next);const sanitized=next.map(sanitizeAsset),holdingsChanged=sanitized.some((asset,i)=>asset.amount!==assets[i].amount);saveAssetsToStorage(sanitized);assets=sanitized;if(holdingsChanged)invalidatePerformanceHistory(); transactionHistory.unshift({id:Date.now(),date:new Date().toISOString(),action:'保有資産を編集'}); saveHistoryToStorage(transactionHistory); const button=document.getElementById('saveButton'); if(button){const old=button.textContent;button.textContent='✅ 保存しました';button.disabled=true;setTimeout(()=>{button.textContent=old;button.disabled=false},1400);} let feedback=document.getElementById('saveFeedback'); if(!feedback){feedback=document.createElement('div');feedback.id='saveFeedback';feedback.className='save-feedback';document.querySelector('.sticky-save-bar')?.appendChild(feedback);} feedback.textContent='ホーム・資産ページにも保存内容が反映されました。'; renderAssetEditor();}catch(error){alert(error.message)} }
