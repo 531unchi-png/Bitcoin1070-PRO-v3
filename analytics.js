@@ -361,7 +361,7 @@ function drawCategoryChart(
 // =====================================
 
 function recordDailyAssetTotal(
-    totals, complete = false
+    totals, complete = false, evaluations = []
 ) {
     const today =
         getLocalDateKey();
@@ -402,6 +402,13 @@ function recordDailyAssetTotal(
         cash: Math.round(totals.cash),
 
         complete,
+        positions: complete ? Object.values(evaluations.filter(a => Number(a.amount) > 0).reduce((groups, a) => {
+            const symbol = String(a.symbol).trim().toUpperCase(), id = `${a.type}:${symbol}`;
+            if (!groups[id]) groups[id] = {type: a.type, symbol, name: String(a.name || a.symbol), quantity: 0, value: 0};
+            groups[id].quantity += Number(a.amount);
+            groups[id].value += Number(a.marketValueJpy);
+            return groups;
+        }, Object.create(null))) : [],
         updatedAt:
             new Date()
                 .toISOString()
@@ -1043,8 +1050,10 @@ function updatePortfolioAnalytics(
          Number.isFinite(Number(a.marketValueJpy))));
     const history =
         recordDailyAssetTotal(
-            totals, complete
+            totals, complete, evaluations
         );
+
+    if (typeof updateMonthlyAnalytics === "function") updateMonthlyAnalytics();
 
     drawAssetHistoryChart(
         history,
