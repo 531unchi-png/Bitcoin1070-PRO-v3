@@ -61,6 +61,29 @@ function saveCryptoPrices(prices, fetchedAt) {
 }
 let latestEvaluations = [];
 
+async function refreshFundNav() {
+    const status = document.getElementById('fundNavStatus');
+    const symbols = [...new Set(assets.filter(asset => asset.type === 'fund' &&
+        ['0331418A', '03311187'].includes(String(asset.symbol).toUpperCase()))
+        .map(asset => String(asset.symbol).toUpperCase()))];
+    if (!symbols.length || !window.B1070_FUND_NAV) return;
+    if (status) status.textContent = '投資信託の基準価額を確認中…';
+    try {
+        const quotes = await window.B1070_FUND_NAV.fetchQuotes(symbols);
+        // Always use the latest holdings; another page can change localStorage while fetching.
+        const current = loadAssetsFromStorage(DEFAULT_ASSETS);
+        const result = window.B1070_FUND_NAV.applyQuotes(current, quotes);
+        if (result.updated) saveAssetsToStorage(result.assets.map(sanitizeAsset));
+        assets = result.assets;
+        refreshPortfolio();
+        const dates = Object.values(quotes).map(q => q.navDate).sort();
+        if (status) status.textContent = `投資信託：公式基準価額 ${dates[dates.length - 1]} 公表分を確認${result.updated ? `（${result.updated}件更新）` : ''}${Object.keys(quotes).length < symbols.length ? '。一部の銘柄は保存済みの値を表示中。' : ''}`;
+    } catch (error) {
+        if (status) status.textContent = '投資信託：自動取得できませんでした。保存済みの基準価額を表示中。';
+        console.warn('投資信託の基準価額取得エラー:', error);
+    }
+}
+
 
 
 // =====================================
@@ -828,6 +851,8 @@ async function loadMarketData() {
     const comment =
         document.getElementById("assetComment");
 
+    const fundPromise = refreshFundNav();
+
     // ページ移動直後は保存済みの正常価格を先に描画し、0円表示を防ぐ
     if (Object.keys(latestCryptoPrices).length > 0) {
         refreshPortfolio();
@@ -866,6 +891,7 @@ async function loadMarketData() {
 
         refreshPortfolio();
     }
+    await fundPromise;
 }
 
 
