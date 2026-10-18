@@ -27,5 +27,7 @@ for(const symbol of ['0331418A','03311187']){
 }
 api.resetAppStorage();api.commitLedgerTransaction({kind:'DEPOSIT',date:'2026-08-16T12:00',amount:200000});assert.equal(api.loadCashBalance(),200000);assert.equal(api.loadTransactionsFromStorage()[0].kind,'DEPOSIT');
 api.commitLedgerTransaction({kind:'BUY',date:'2026-08-16T12:30',type:'crypto',symbol:'BTC',name:'Bitcoin',quantity:.01,unitPrice:10000000,feeJpy:0,coinGeckoId:'bitcoin'});assert.equal(api.loadCashBalance(),100000);assert.equal(api.loadAssetsFromStorage([])[0].coinGeckoId,'bitcoin');
+const link=api.commitLedgerTransaction({kind:'BUY',date:'2026-08-16T12:31',type:'crypto',symbol:'LINK',name:'Chainlink',quantity:2,unitPrice:1900,feeJpy:0,coinGeckoId:'chainlink'});
+assert.equal(link.cashBalance,96200);assert.equal(link.assets.find(asset=>asset.symbol==='LINK').coinGeckoId,'chainlink');assert.equal(link.assets.find(asset=>asset.symbol==='LINK').cost,1900);
 api.resetAppStorage();assert.equal(api.loadCashBalance(),0);assert.equal(api.loadTransactionsFromStorage().length,0);
 console.log('ledger tests passed');

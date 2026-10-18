@@ -10,5 +10,7 @@ for(const expected of ["285A","2809","2801","2503","6861"])assert.ok(symbols("�
 assert.equal(symbols("7203")[0],"7203");assert.ok(symbols("とよた").includes("7203"));
 assert.equal(symbols("NVDA")[0],"NVDA");assert.equal(symbols("nvidia")[0],"NVDA");
 assert.equal(symbols("BTC")[0],"BTC");assert.equal(symbols("bitcoin")[0],"BTC");assert.ok(symbols("びっと").includes("BTC"));
+for(const query of ["LINK","link/jpy","Chainlink","チェーンリンク"]){assert.equal(symbols(query)[0],"LINK",query);}
+assert.equal(api.localCatalog([]).find(item=>item.type==="crypto"&&item.symbol==="LINK").coinGeckoId,"chainlink");
 const holdings=[{type:"jp",symbol:"7203",name:"トヨタ自動車",amount:2,yahooSymbol:"7203.T"},{type:"us",symbol:"AAPL",name:"Apple",amount:0,yahooSymbol:"AAPL"}];
-(async()=>{let result=await api.search("7203",{holdings,sellOnly:true});assert.deepEqual(result.items.map(x=>x.symbol),["7203"]);result=await api.search("apple",{holdings,sellOnly:true});assert.equal(result.items.length,0);result=await api.search("フジクラ");assert.equal(result.items.map(x=>x.symbol).join(","),"5803");console.log("asset search tests passed");})().catch(error=>{console.error(error);process.exitCode=1;});
+(async()=>{let result=await api.search("7203",{holdings,sellOnly:true});assert.deepEqual(result.items.map(x=>x.symbol),["7203"]);result=await api.search("apple",{holdings,sellOnly:true});assert.equal(result.items.length,0);result=await api.search("フジクラ");assert.equal(result.items.map(x=>x.symbol).join(","),"5803");result=await api.search("LINK",{type:"crypto"});assert.equal(result.items[0].coinGeckoId,"chainlink");console.log("asset search tests passed");})().catch(error=>{console.error(error);process.exitCode=1;});

@@ -4,6 +4,7 @@ window.B1070_ASSET_MASTER = [
   {type:'crypto',symbol:'ETH',name:'Ethereum',coinGeckoId:'ethereum',keywords:['イーサリアム']},
   {type:'crypto',symbol:'XRP',name:'XRP',coinGeckoId:'ripple',keywords:['リップル']},
   {type:'crypto',symbol:'SOL',name:'Solana',coinGeckoId:'solana',keywords:['ソラナ']},
+  {type:'crypto',symbol:'LINK',name:'Chainlink',coinGeckoId:'chainlink',keywords:['チェーンリンク','LINK/JPY']},
   {type:'crypto',symbol:'SUI',name:'Sui',coinGeckoId:'sui',keywords:['スイ']},
   {type:'crypto',symbol:'RENDER',name:'Render',coinGeckoId:'render-token',keywords:['レンダー','RNDR']},
   {type:'crypto',symbol:'TAO',name:'Bittensor',coinGeckoId:'bittensor',keywords:['ビテンソル']},
